@@ -1,11 +1,14 @@
 package com.adamkali.simpleide.codearea;
 
+import javax.tools.Tool;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.ArrayList;
 
-public class CodeArea extends Canvas implements KeyListener {
+public class CodeArea extends Canvas implements KeyListener, MouseListener {
     private static final int LINE_NUM_WIDTH = 32;
     private static final int STATUS_BAR_HEIGHT = 32;
     private static final int MARGIN = 8;
@@ -36,6 +39,7 @@ public class CodeArea extends Canvas implements KeyListener {
 
         // Setup listeners
         addKeyListener(this);
+        addMouseListener(this);
         setFocusable(true);
         setFocusTraversalKeysEnabled(false);
 
@@ -92,9 +96,13 @@ public class CodeArea extends Canvas implements KeyListener {
 
     @Override
     public void keyTyped(KeyEvent e) {
+        String textBeforeCursor = lines.get(cursorRow).substring(0, cursorColumn);
+        String textAfterCursor = lines.get(cursorRow).substring(cursorColumn);
+
         switch (e.getKeyChar()) {
             case KeyEvent.VK_ENTER:
-                lines.add("");
+                lines.set(cursorRow, textBeforeCursor);
+                lines.add(cursorRow + 1, textAfterCursor);
                 cursorColumn = 0;
                 cursorRow++;
                 break;
@@ -104,22 +112,27 @@ public class CodeArea extends Canvas implements KeyListener {
                     break;
                 }
 
-                if (!lines.get(lines.size() - 1).isEmpty()) {
-                    lines.set(lines.size() - 1, lines.get(lines.size() - 1).substring(0, lines.get(lines.size() - 1).length() - 1));
+                if (!textBeforeCursor.isEmpty()) {
+                    lines.set(cursorRow, textBeforeCursor.substring(0, textBeforeCursor.length() - 1) + textAfterCursor);
                     cursorColumn--;
                 } else {
+                    // Move the text from the current line to the previous line, and delete the current line
                     lines.remove(lines.size() - 1);
-                    cursorColumn = lines.get(lines.size() - 1).length();
+
+                    lines.set(cursorRow - 1, lines.get(cursorRow - 1) + textAfterCursor);
+                    cursorColumn = lines.get(lines.size() - 1).length() - textAfterCursor.length();
                     cursorRow--;
                 }
                 break;
+
             default:
                 // If the file is empty, add a new line
                 if (lines.isEmpty()) {
                     lines.add("");
+                    cursorRow = 0;
                 }
 
-                lines.set(lines.size() - 1, lines.get(lines.size() - 1) + e.getKeyChar());
+                lines.set(cursorRow, textBeforeCursor + e.getKeyChar() + textAfterCursor);
                 cursorColumn++;
                 break;
         }
@@ -127,11 +140,99 @@ public class CodeArea extends Canvas implements KeyListener {
 
     @Override
     public void keyPressed(KeyEvent e) {
+        String textBeforeCursor = lines.get(cursorRow).substring(0, cursorColumn);
+        String textAfterCursor = lines.get(cursorRow).substring(cursorColumn);
 
+        switch (e.getKeyCode()) {
+            case KeyEvent.VK_LEFT:
+                if (textBeforeCursor.isEmpty()) {
+                    if (cursorRow > 0) {
+                        cursorRow--;
+                        cursorColumn = lines.get(cursorRow).length();
+                    }
+                } else {
+                    cursorColumn--;
+                }
+                break;
+            case KeyEvent.VK_RIGHT:
+                if (textAfterCursor.isEmpty()) {
+                    if (cursorRow < lines.size() - 1) {
+                        cursorRow++;
+                        cursorColumn = 0;
+                    }
+                } else {
+                    cursorColumn++;
+                }
+                break;
+            case KeyEvent.VK_UP:
+                if (cursorRow > 0) {
+                    cursorRow--;
+                    if (cursorColumn > lines.get(cursorRow).length()) {
+                        cursorColumn = lines.get(cursorRow).length();
+                    }
+                }
+                break;
+            case KeyEvent.VK_DOWN:
+                if (cursorRow < lines.size() - 1) {
+                    cursorRow++;
+                    if (cursorColumn > lines.get(cursorRow).length()) {
+                        cursorColumn = lines.get(cursorRow).length();
+                    }
+                }
+                break;
+                default:
+                    break;
+        }
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
+
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        requestFocus();
+        cursorVisible = true;
+
+        int column, row;
+
+        // Calculate cursor position
+        column = (e.getX() - LINE_NUM_WIDTH - MARGIN) / CHARACTER_WIDTH;
+        row = (e.getY() - MARGIN) / LINE_HEIGHT;
+
+        // If the cursor is out of bounds, set it to the last line
+        if (row > lines.size() - 1) {
+            row = lines.size() - 1;
+        }
+
+        // If the cursor is out of bounds, set it to the end of the line
+        if (column > lines.get(row).length()) {
+            column = lines.get(row).length();
+        }
+
+        cursorColumn = column;
+        cursorRow = row;
+        System.out.println(cursorColumn + ", " + cursorRow);
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
 
     }
 }
