@@ -6,6 +6,8 @@ import java.awt.event.KeyListener;
 import java.util.ArrayList;
 
 public class CodeArea extends Canvas implements KeyListener {
+    private static final int LINE_NUM_WIDTH = 32;
+    private static final int STATUS_BAR_HEIGHT = 32;
     private static final int MARGIN = 8;
     private static final int LINE_HEIGHT = 20;
     private static final int CHARACTER_WIDTH = 8;
@@ -60,17 +62,32 @@ public class CodeArea extends Canvas implements KeyListener {
 
         // Draw text lines
         for (int i = 0; i < lines.size(); i++) {
-            g.drawString(lines.get(i), MARGIN, MARGIN + (i + 1) * LINE_HEIGHT);
+            g.drawString(lines.get(i), LINE_NUM_WIDTH + MARGIN, MARGIN + (i + 1) * LINE_HEIGHT);
         }
 
         // Draw cursor
         if (cursorVisible) {
             int stringWidth = g.getFontMetrics().stringWidth(lines.get(cursorRow).substring(0, cursorColumn));
-            g.drawLine(MARGIN + stringWidth + CURSOR_OFFSET_X,
+            g.drawLine(LINE_NUM_WIDTH + MARGIN + stringWidth + CURSOR_OFFSET_X,
                     MARGIN + cursorRow * LINE_HEIGHT + CURSOR_OFFSET_Y,
-                    MARGIN + stringWidth + CURSOR_OFFSET_X,
+                    LINE_NUM_WIDTH + MARGIN + stringWidth + CURSOR_OFFSET_X,
                     MARGIN + cursorRow * LINE_HEIGHT + CURSOR_HEIGHT + CURSOR_OFFSET_Y);
         }
+
+        // Draw line numbers
+        g.setColor(Color.LIGHT_GRAY);
+        g.fillRect(0, 0, LINE_NUM_WIDTH, getHeight());
+        g.setColor(Color.BLACK);
+        for (int i = 0; i < lines.size(); i++) {
+            g.drawString(String.valueOf(i + 1), MARGIN , MARGIN + (i + 1) * LINE_HEIGHT);
+        }
+
+        // Draw status bar
+        g.setColor(Color.LIGHT_GRAY);
+        g.fillRect(0, getHeight() - STATUS_BAR_HEIGHT, getWidth(), STATUS_BAR_HEIGHT);
+        g.setColor(Color.BLACK);
+        g.drawString("SimpleIDE", MARGIN, getHeight() - MARGIN);
+        g.drawString("Line: " + (cursorRow + 1) + ", Column: " + (cursorColumn + 1), getWidth() - 200, getHeight() - MARGIN);
     }
 
     @Override
