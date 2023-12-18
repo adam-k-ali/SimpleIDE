@@ -8,12 +8,29 @@ import java.util.ArrayList;
 public class CodeArea extends Canvas implements KeyListener {
     private static final int MARGIN = 8;
     private static final int LINE_HEIGHT = 20;
+    private static final int CHARACTER_WIDTH = 8;
+
+    private static final int CURSOR_OFFSET_X = 1;
+    private static final int CURSOR_OFFSET_Y = 4;
+    private static final int CURSOR_HEIGHT = 16;
+    private static final long CURSOR_PERIOD = 500L;
+
+    // The position of the cursor in the codeArea
+    private int cursorColumn;
+    private int cursorRow;
+
+    private boolean cursorVisible;
+
+    // The time in milliseconds between cursor blinks
+    private long lastCursorBlinkTime;
 
     private ArrayList<String> lines;
 
     public CodeArea() {
         // Setup CodeArea properties
-        lines = new ArrayList<>();
+        lines = new ArrayList<>() {{
+            add("");
+        }};
 
         // Setup listeners
         addKeyListener(this);
@@ -29,23 +46,40 @@ public class CodeArea extends Canvas implements KeyListener {
      * such as cursor position, text, etc.
      */
     public void update() {
+        if (System.currentTimeMillis() - lastCursorBlinkTime > CURSOR_PERIOD) {
+            lastCursorBlinkTime = System.currentTimeMillis();
+            cursorVisible = !cursorVisible;
+        }
+
         repaint();
     }
 
     @Override
     public void paint(Graphics g) {
         g.setColor(Color.BLACK);
+
+        // Draw text lines
         for (int i = 0; i < lines.size(); i++) {
             g.drawString(lines.get(i), MARGIN, MARGIN + (i + 1) * LINE_HEIGHT);
+        }
+
+        // Draw cursor
+        if (cursorVisible) {
+            int stringWidth = g.getFontMetrics().stringWidth(lines.get(cursorRow).substring(0, cursorColumn));
+            g.drawLine(MARGIN + stringWidth + CURSOR_OFFSET_X,
+                    MARGIN + cursorRow * LINE_HEIGHT + CURSOR_OFFSET_Y,
+                    MARGIN + stringWidth + CURSOR_OFFSET_X,
+                    MARGIN + cursorRow * LINE_HEIGHT + CURSOR_HEIGHT + CURSOR_OFFSET_Y);
         }
     }
 
     @Override
     public void keyTyped(KeyEvent e) {
-        System.out.println(e.getKeyChar());
         switch (e.getKeyChar()) {
             case KeyEvent.VK_ENTER:
                 lines.add("");
+                cursorColumn = 0;
+                cursorRow++;
                 break;
             case KeyEvent.VK_BACK_SPACE:
                 // Don't allow backspace if we're on the first, empty line
@@ -55,8 +89,11 @@ public class CodeArea extends Canvas implements KeyListener {
 
                 if (!lines.get(lines.size() - 1).isEmpty()) {
                     lines.set(lines.size() - 1, lines.get(lines.size() - 1).substring(0, lines.get(lines.size() - 1).length() - 1));
+                    cursorColumn--;
                 } else {
                     lines.remove(lines.size() - 1);
+                    cursorColumn = lines.get(lines.size() - 1).length();
+                    cursorRow--;
                 }
                 break;
             default:
@@ -66,6 +103,7 @@ public class CodeArea extends Canvas implements KeyListener {
                 }
 
                 lines.set(lines.size() - 1, lines.get(lines.size() - 1) + e.getKeyChar());
+                cursorColumn++;
                 break;
         }
     }
