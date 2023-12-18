@@ -22,9 +22,6 @@ public class CodeArea extends Canvas implements KeyListener {
 
         // Setup canvas graphics
         setBackground(Color.WHITE);
-
-        // FIXME: For testing purposes only
-        lines.add("Hello World!");
     }
 
     /**
