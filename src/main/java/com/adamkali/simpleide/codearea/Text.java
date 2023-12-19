@@ -3,14 +3,13 @@ package com.adamkali.simpleide.codearea;
 import java.awt.*;
 
 public class Text {
+    public static final Text EMPTY = new Text();
+
     // The text to be displayed
     private String text;
-    // The width of the text in pixels (used for cursor positioning)
-    private int stringWidth;
 
     public Text() {
         this.text = "";
-        this.stringWidth = 0;
     }
 
     public String getText() {
@@ -20,14 +19,25 @@ public class Text {
     /**
      * Saves the updated text and updates stringWidth
      * @param text The new text
-     * @param fontMetrics The fontMetrics of the font used to draw the text
      */
-    public void setText(String text, FontMetrics fontMetrics) {
+    public void setText(String text) {
         this.text = text;
-        stringWidth = fontMetrics.stringWidth(text);
     }
 
-    public int getStringWidth() {
-        return stringWidth;
+    /**
+     * Inserts text at the specified index
+     * @param text The text to be inserted
+     * @param index The index to insert the text at
+     */
+    public void insert(String text, int index) {
+        if (index < 0 || index > this.text.length()) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        this.text = this.text.substring(0, index) + text + this.text.substring(index);
+    }
+
+    public int getStringWidth(FontMetrics fontMetrics) {
+        return fontMetrics.stringWidth(text);
     }
 }
