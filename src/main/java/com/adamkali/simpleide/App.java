@@ -1,7 +1,6 @@
 package com.adamkali.simpleide;
 
 import com.adamkali.simpleide.codearea.CodeEditor;
-import com.adamkali.simpleide.codearea.Cursor;
 import com.adamkali.simpleide.codearea.StatusBar;
 
 import javax.swing.*;
