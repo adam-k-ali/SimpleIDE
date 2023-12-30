@@ -1,4 +1,4 @@
-package com.adamkali.simpleide.io;
+package com.adamkali.simpleide.editor.io;
 
 import java.util.ArrayList;
 

@@ -1,4 +1,4 @@
-package com.adamkali.simpleide.codearea;
+package com.adamkali.simpleide.editor;
 
 import com.adamkali.simpleide.Global;
 

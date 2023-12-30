@@ -1,6 +1,6 @@
 package com.adamkali.simpleide;
 
-import com.adamkali.simpleide.io.Cursor;
+import com.adamkali.simpleide.editor.io.Cursor;
 
 import java.awt.*;
 
@@ -8,7 +8,6 @@ public class Global {
     private static int margin_top = 10;
     private static int margin_left = 10;
     private static int line_num_width = 32;
-
     private static Font font = new Font("Monospaced", Font.PLAIN, 12);
 
     private static Cursor cursor = new Cursor();

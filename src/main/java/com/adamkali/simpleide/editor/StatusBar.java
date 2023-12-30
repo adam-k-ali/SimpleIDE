@@ -1,4 +1,4 @@
-package com.adamkali.simpleide.codearea;
+package com.adamkali.simpleide.editor;
 
 import javax.swing.*;
 import java.awt.*;

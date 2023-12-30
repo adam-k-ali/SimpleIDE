@@ -1,7 +1,7 @@
 package com.adamkali.simpleide;
 
-import com.adamkali.simpleide.codearea.CodeEditor;
-import com.adamkali.simpleide.codearea.StatusBar;
+import com.adamkali.simpleide.editor.CodeEditor;
+import com.adamkali.simpleide.editor.StatusBar;
 
 import javax.swing.*;
 import java.awt.*;
