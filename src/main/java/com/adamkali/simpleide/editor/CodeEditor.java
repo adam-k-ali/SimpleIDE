@@ -1,6 +1,9 @@
 package com.adamkali.simpleide.editor;
 
 import com.adamkali.simpleide.Global;
+import com.adamkali.simpleide.editor.lang.Lexer;
+import com.adamkali.simpleide.editor.lang.tokens.Token;
+import org.apache.commons.lang.StringEscapeUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -8,6 +11,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.StringJoiner;
 
 public class CodeEditor extends JPanel implements Scrollable, KeyListener, MouseListener {
     private static final int LINE_NUM_WIDTH = 32;
@@ -149,6 +153,17 @@ public class CodeEditor extends JPanel implements Scrollable, KeyListener, Mouse
                 Global.getCursor().moveRight();
                 break;
         }
+
+        StringJoiner text = new StringJoiner("\n");
+        for (String line : Global.getCursor().lines) {
+            // If the line is empty, skip it
+            if (line.isEmpty()) {
+                continue;
+            }
+            text.add(line);
+        }
+
+        java.util.List<Token> tokens = Lexer.lex(text.toString());
     }
 
     @Override

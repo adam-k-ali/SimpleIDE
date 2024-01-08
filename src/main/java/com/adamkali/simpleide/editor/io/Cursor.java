@@ -1,5 +1,8 @@
 package com.adamkali.simpleide.editor.io;
 
+import com.adamkali.simpleide.editor.lang.tokens.NewLineToken;
+import com.adamkali.simpleide.editor.lang.tokens.Token;
+
 import java.util.ArrayList;
 
 public class Cursor {
@@ -7,6 +10,7 @@ public class Cursor {
     private int row;
 
     public ArrayList<String> lines;
+    public ArrayList<Token> tokens;
 
     public Cursor() {
         this(0, 0);
