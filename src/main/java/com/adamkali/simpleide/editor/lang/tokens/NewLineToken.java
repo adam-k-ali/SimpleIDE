@@ -4,6 +4,6 @@ import java.awt.*;
 
 public class NewLineToken extends Token {
     public NewLineToken() {
-        super(Color.WHITE, Color.BLACK);
+        super(Color.WHITE, Color.BLACK, "\n");
     }
 }

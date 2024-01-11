@@ -105,7 +105,7 @@ public class Lexer {
 //                        tokens.add(new MLCommentToken(atom));
                     } else {
                         // Not a single line comment, just a plain text token
-                        tokens.add(new PlainTextToken(atom));
+                        tokens.add(new UndefinedToken(atom));
                     }
                     break;
                 default:
@@ -119,7 +119,7 @@ public class Lexer {
                     if (isKeyword(atom)) {
                         tokens.add(new KeywordToken(atom));
                     } else {
-                        tokens.add(new PlainTextToken(atom));
+                        tokens.add(new UndefinedToken(atom));
                     }
                     break;
             }

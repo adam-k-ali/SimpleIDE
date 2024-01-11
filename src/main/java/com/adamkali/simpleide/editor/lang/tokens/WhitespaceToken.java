@@ -4,6 +4,6 @@ import java.awt.*;
 
 public class WhitespaceToken extends Token {
     public WhitespaceToken() {
-        super(Color.WHITE, Color.BLACK);
+        super(Color.WHITE, Color.BLACK, " ");
     }
 }

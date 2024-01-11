@@ -1,5 +1,7 @@
 package com.adamkali.simpleide.editor.lang.tokens;
 
+import com.adamkali.simpleide.preferences.EditorColors;
+
 import java.awt.*;
 
 /**
@@ -7,7 +9,6 @@ import java.awt.*;
  */
 public class SLCommentToken extends Token {
     public SLCommentToken(String text) {
-        super(Color.WHITE, Color.GREEN);
-        this.text = text;
+        super(EditorColors.COMMENT_BG_COLOR, EditorColors.COMMENT_FG_COLOR, text);
     }
 }

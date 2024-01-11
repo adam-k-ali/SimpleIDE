@@ -1,23 +1,22 @@
 package com.adamkali.simpleide.editor;
 
 import com.adamkali.simpleide.Global;
-import com.adamkali.simpleide.editor.lang.Lexer;
+import com.adamkali.simpleide.editor.io.Document;
+import com.adamkali.simpleide.editor.io.action.ActionsList;
+import com.adamkali.simpleide.editor.lang.tokens.NewLineToken;
+import com.adamkali.simpleide.editor.lang.tokens.TabToken;
 import com.adamkali.simpleide.editor.lang.tokens.Token;
-import org.apache.commons.lang.StringEscapeUtils;
+import com.adamkali.simpleide.editor.lang.tokens.WhitespaceToken;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.util.StringJoiner;
 
-public class CodeEditor extends JPanel implements Scrollable, KeyListener, MouseListener {
+public class CodeEditor extends JPanel implements Scrollable, KeyListener {
     private static final int LINE_NUM_WIDTH = 32;
     private static final int MARGIN_LEFT = 8;
     private static final int MARGIN_TOP = 4;
-    private static final int LINE_HEIGHT = 20;
     private static final int CHARACTER_WIDTH = 8;
 
     private static final int CURSOR_OFFSET_X = 1;
@@ -34,7 +33,6 @@ public class CodeEditor extends JPanel implements Scrollable, KeyListener, Mouse
         super();
         // Setup listeners
         addKeyListener(this);
-        addMouseListener(this);
         setFocusable(true);
         setFocusTraversalKeysEnabled(false);
 
@@ -43,12 +41,23 @@ public class CodeEditor extends JPanel implements Scrollable, KeyListener, Mouse
         setBackground(Color.WHITE);
     }
 
+    /**
+     * Gets the width of the string of the current line, up to a given column.
+     * @param column The column to get the width up to.
+     * @return The width of the string (in pixels).
+     */
+    private int getStringWidthUpToColumn(int column) {
+        return Global.getStringWidth(Global.getCursor().document.getLine(Global.getCursor().getCurrentLine()).substring(0, column));
+    }
+
     private void expandCanvas(FontMetrics fontMetrics) {
-        int documentHeight = (Global.getCursor().lines.size() + 6) * LINE_HEIGHT;
+        int numberOfLines = Global.getCursor().document.numberOfLines();
+
+        int documentHeight = (numberOfLines + 6) * Global.getLineHeight();
         int documentWidth = 800;
 
-        for (String line : Global.getCursor().lines) {
-            int lineWidth = fontMetrics.stringWidth(line);
+        for (int i = 0; i < numberOfLines; i++) {
+            int lineWidth = Global.getStringWidth(Global.getCursor().document.getLine(i).toString());
             if (lineWidth > documentWidth) {
                 documentWidth = lineWidth;
             }
@@ -76,29 +85,56 @@ public class CodeEditor extends JPanel implements Scrollable, KeyListener, Mouse
         g.setColor(Color.LIGHT_GRAY);
         g.fillRect(0, 0, LINE_NUM_WIDTH, getHeight());
         g.setColor(Color.BLACK);
-        for (int i = 0; i < Global.getCursor().lines.size(); i++) {
-            g.drawString(String.valueOf(i + 1), MARGIN_LEFT, MARGIN_TOP + (i + 1) * LINE_HEIGHT);
+        for (int i = 0; i < Global.getCursor().document.numberOfLines(); i++) {
+            g.drawString(String.valueOf(i + 1), MARGIN_LEFT, MARGIN_TOP + (i + 1) * Global.getLineHeight());
         }
     }
 
     private void drawCursor(Graphics g) {
-        int stringWidth = g.getFontMetrics().stringWidth(Global.getCursor().lines.get(Global.getCursor().getRow()).substring(0, Global.getCursor().getColumn()));
+        int stringWidth = Global.getStringWidth(Global.getCursor().getTextBeforeCursor());
+
         g.drawLine(LINE_NUM_WIDTH + MARGIN_LEFT + stringWidth + CURSOR_OFFSET_X,
-                MARGIN_TOP + Global.getCursor().getRow() * LINE_HEIGHT + CURSOR_OFFSET_Y,
+                MARGIN_TOP + Global.getCursor().getCurrentLine() * Global.getLineHeight() + CURSOR_OFFSET_Y,
                 LINE_NUM_WIDTH + MARGIN_LEFT + stringWidth + CURSOR_OFFSET_X,
-                MARGIN_TOP + Global.getCursor().getRow() * LINE_HEIGHT + CURSOR_HEIGHT + CURSOR_OFFSET_Y);
+                MARGIN_TOP + Global.getCursor().getCurrentLine() * Global.getLineHeight() + CURSOR_HEIGHT + CURSOR_OFFSET_Y);
     }
 
+    private void drawText(Graphics g) {
+        int pxColumn = 0;
+        int pxRow = Global.getLineHeight();
+        int stringWidth;
+        for (Document.Line line : Global.getCursor().document.getLines()) {
+            for (Token token : line.getTokens()) {
+                if (token instanceof NewLineToken) {
+                    // There shouldn't be a NewLineToken in the middle of a line,
+                    // so we can just skip to the next line.
+                    break;
+                }
+                stringWidth = Global.getStringWidth(token.getText());
+                g.setColor(token.getBackgroundColor());
+                g.fillRect(LINE_NUM_WIDTH + MARGIN_LEFT + pxColumn, MARGIN_TOP + pxRow - Global.getLineHeight() + 2, stringWidth, Global.getLineHeight());
+
+                if (token.isUnderlined()) {
+                    g.setColor(Color.RED);
+                    g.drawLine(LINE_NUM_WIDTH + MARGIN_LEFT + pxColumn, MARGIN_TOP + pxRow, LINE_NUM_WIDTH + MARGIN_LEFT + pxColumn + stringWidth, MARGIN_TOP + pxRow);
+                }
+
+                g.setColor(token.getForegroundColor());
+                g.drawString(token.getText(), LINE_NUM_WIDTH + MARGIN_LEFT + pxColumn, MARGIN_TOP + pxRow);
+                pxColumn += stringWidth;
+            }
+            pxRow += Global.getLineHeight();
+            pxColumn = 0;
+        }
+    }
 
     @Override
     protected void paintComponent(Graphics g) {
 //        super.paintComponent(g);
+        g.setFont(Global.getFont());
         g.setColor(Color.BLACK);
 
-        // Draw text lines
-        for (int i = 0; i < Global.getCursor().lines.size(); i++) {
-            g.drawString(Global.getCursor().lines.get(i), LINE_NUM_WIDTH + MARGIN_LEFT, MARGIN_TOP + (i + 1) * LINE_HEIGHT);
-        }
+        drawText(g);
 
         // Draw cursor
         if (cursorVisible) {
@@ -112,58 +148,17 @@ public class CodeEditor extends JPanel implements Scrollable, KeyListener, Mouse
 
     @Override
     public void keyTyped(KeyEvent e) {
-        String textBeforeCursor = Global.getCursor().getTextBeforeCursor();
-        String textAfterCursor = Global.getCursor().getTextAfterCursor();
         switch (e.getKeyChar()) {
             case KeyEvent.VK_ENTER:
-                Global.getCursor().lines.set(Global.getCursor().getRow(), textBeforeCursor);
-                Global.getCursor().lines.add(Global.getCursor().getRow() + 1, textAfterCursor);
-                Global.getCursor().moveDown();
+                ActionsList.NEW_LINE.execute();
                 break;
             case KeyEvent.VK_BACK_SPACE:
-                // Don't allow backspace if we're on the first, empty line
-                if (Global.getCursor().lines.size() == 1 && Global.getCursor().lines.get(0).isEmpty() || Global.getCursor().lines.isEmpty()) {
-                    break;
-                }
-
-                if (!textBeforeCursor.isEmpty()) {
-                    Global.getCursor().lines.set(Global.getCursor().getRow(), textBeforeCursor.substring(0, textBeforeCursor.length() - 1) + textAfterCursor);
-                    Global.getCursor().moveLeft();
-                } else {
-                    if (Global.getCursor().getRow() == 0) {
-                        break;
-                    }
-
-                    // Move the text from the current line to the previous line, and delete the current line
-                    Global.getCursor().lines.remove(Global.getCursor().getRow());
-                    int previousLineLength = Global.getCursor().lines.get(Global.getCursor().getRow() - 1).length();
-                    Global.getCursor().lines.set(Global.getCursor().getRow() - 1, Global.getCursor().lines.get(Global.getCursor().getRow() - 1) + textAfterCursor);
-                    Global.getCursor().moveTo(previousLineLength, Global.getCursor().getRow() - 1);
-                }
+                ActionsList.BACKSPACE.execute();
                 break;
-
             default:
-                // If the file is empty, add a new line
-                if (Global.getCursor().lines.isEmpty()) {
-                    Global.getCursor().lines.add("");
-                    Global.getCursor().moveTo(0, 0);
-                }
-
-                Global.getCursor().lines.set(Global.getCursor().getRow(), textBeforeCursor + e.getKeyChar() + textAfterCursor);
-                Global.getCursor().moveRight();
+                 ActionsList.TYPE_CHARACTER.execute(e.getKeyChar());
                 break;
         }
-
-        StringJoiner text = new StringJoiner("\n");
-        for (String line : Global.getCursor().lines) {
-            // If the line is empty, skip it
-            if (line.isEmpty()) {
-                continue;
-            }
-            text.add(line);
-        }
-
-        java.util.List<Token> tokens = Lexer.lex(text.toString());
     }
 
     @Override
@@ -192,67 +187,18 @@ public class CodeEditor extends JPanel implements Scrollable, KeyListener, Mouse
     }
 
     @Override
-    public void mouseClicked(MouseEvent e) {
-        int column, row;
-
-        // Calculate cursor position
-        row = (e.getY() - Global.getMarginTop()) / Global.getLineHeight();
-        if (row > Global.getCursor().lines.size() - 1) {
-            row = Global.getCursor().lines.size() - 1;
-        }
-        // Column is the number of characters from the left of the screen,
-        // as each character is of a different width, this will need to be done iteratively
-        // If the cursor is out of bounds, set it to the last line
-        column = 0;
-        for (int i = 0; i < Global.getCursor().lines.get(row).length(); i++) {
-            column += Global.getStringWidth(Global.getCursor().lines.get(row).substring(i, i + 1));
-            if (column > e.getX()) {
-                column = i;
-                break;
-            }
-        }
-
-        // If the cursor is out of bounds, set it to the end of the line
-        if (column > Global.getCursor().lines.get(row).length()) {
-            column = Global.getCursor().lines.get(row).length();
-        }
-
-        Global.getCursor().moveTo(column, row);
-    }
-
-    @Override
-    public void mousePressed(MouseEvent e) {
-
-    }
-
-    @Override
-    public void mouseReleased(MouseEvent e) {
-
-    }
-
-    @Override
-    public void mouseEntered(MouseEvent e) {
-
-    }
-
-    @Override
-    public void mouseExited(MouseEvent e) {
-
-    }
-
-    @Override
     public Dimension getPreferredScrollableViewportSize() {
         return new Dimension(getSize().width, getSize().height);
     }
 
     @Override
     public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
-        return orientation == SwingConstants.VERTICAL ? LINE_HEIGHT : CHARACTER_WIDTH;
+        return orientation == SwingConstants.VERTICAL ? Global.getLineHeight() : CHARACTER_WIDTH;
     }
 
     @Override
     public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) {
-        return orientation == SwingConstants.VERTICAL ? LINE_HEIGHT : CHARACTER_WIDTH;
+        return orientation == SwingConstants.VERTICAL ? Global.getLineHeight() : CHARACTER_WIDTH;
     }
 
     @Override
