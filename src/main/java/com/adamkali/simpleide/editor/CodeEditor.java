@@ -36,8 +36,9 @@ public class CodeEditor extends JPanel implements Scrollable, KeyListener {
         setFocusable(true);
         setFocusTraversalKeysEnabled(false);
 
+        this.setFont(Global.getFont());
+
         // Setup canvas graphics
-        expandCanvas(getFontMetrics(getFont()));
         setBackground(Color.WHITE);
     }
 
@@ -63,8 +64,7 @@ public class CodeEditor extends JPanel implements Scrollable, KeyListener {
             }
         }
 
-        setSize(documentWidth, documentHeight);
-        setPreferredSize(new Dimension(documentWidth, documentHeight));
+        setPreferredSize(new Dimension(documentWidth, Math.max(this.getParent().getHeight(), documentHeight)));
         revalidate();
     }
 
@@ -77,7 +77,7 @@ public class CodeEditor extends JPanel implements Scrollable, KeyListener {
             lastCursorBlinkTime = System.currentTimeMillis();
             cursorVisible = !cursorVisible;
         }
-
+        expandCanvas(getFontMetrics(getFont()));
         repaint();
     }
 
@@ -159,10 +159,12 @@ public class CodeEditor extends JPanel implements Scrollable, KeyListener {
                  ActionsList.TYPE_CHARACTER.execute(e.getKeyChar());
                 break;
         }
+
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
+//        expandCanvas(getFontMetrics(getFont()));
         switch (e.getKeyCode()) {
             case KeyEvent.VK_LEFT:
                 Global.getCursor().moveLeft();

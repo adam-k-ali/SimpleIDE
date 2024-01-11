@@ -37,6 +37,7 @@ public class App {
         mainPanel.setPreferredSize(new Dimension(mainWindow.getWidth(), mainWindow.getHeight()));
 
         CodeEditor codeEditor = new CodeEditor();
+        codeEditor.setPreferredSize(new Dimension(800, 800));
 
         JViewport viewport = new JViewport();
         viewport.setView(codeEditor);
