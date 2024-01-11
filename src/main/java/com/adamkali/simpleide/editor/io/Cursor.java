@@ -1,7 +1,5 @@
 package com.adamkali.simpleide.editor.io;
 
-import com.adamkali.simpleide.editor.lang.tokens.*;
-
 /**
  * The cursor is responsible for moving around the document.
  * Cursor keeps track of three things:
@@ -67,6 +65,10 @@ public class Cursor {
         if (currentColumn > 0) {
             currentColumn--;
         } else {
+            if (currentLine == 0) {
+                return;
+            }
+
             moveUp();
             moveToEndOfLine();
         }
@@ -80,6 +82,9 @@ public class Cursor {
         if (currentColumn < document.getLine(currentLine).length()) {
             currentColumn++;
         } else {
+            if (currentLine == document.numberOfLines() - 1) {
+                return;
+            }
             moveDown();
             moveToStartOfLine();
         }
