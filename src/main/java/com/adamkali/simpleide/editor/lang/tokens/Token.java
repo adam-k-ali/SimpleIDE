@@ -8,7 +8,7 @@ import java.util.Objects;
 public abstract class Token {
     protected Color backgroundColor;
     protected Color foregroundColor;
-    protected boolean underline = false;
+    protected boolean isValid = true;
 
     protected String text;
 
@@ -30,8 +30,12 @@ public abstract class Token {
         return foregroundColor;
     }
 
-    public boolean isUnderlined() {
-        return underline;
+    public boolean isValid() {
+        return isValid;
+    }
+
+    public void setValid(boolean valid) {
+        isValid = valid;
     }
 
     public int length() {
@@ -43,6 +47,7 @@ public abstract class Token {
 
     /**
      * Returns the text contained in the token
+     *
      * @return the text contained in the token
      */
     public String getText() {
@@ -51,6 +56,7 @@ public abstract class Token {
 
     /**
      * Returns the token in a readable string format
+     *
      * @return ClassName [text = "text"]
      */
     @Override

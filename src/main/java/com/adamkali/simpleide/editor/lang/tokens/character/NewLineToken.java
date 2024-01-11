@@ -1,4 +1,6 @@
-package com.adamkali.simpleide.editor.lang.tokens;
+package com.adamkali.simpleide.editor.lang.tokens.character;
+
+import com.adamkali.simpleide.editor.lang.tokens.Token;
 
 import java.awt.*;
 

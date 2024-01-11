@@ -1,12 +1,11 @@
 package com.adamkali.simpleide.editor.io;
 
 import com.adamkali.simpleide.editor.lang.Lexer;
-import com.adamkali.simpleide.editor.lang.tokens.*;
+import com.adamkali.simpleide.editor.lang.tokens.Token;
+import com.adamkali.simpleide.editor.lang.tokens.character.NewLineToken;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.SortedMap;
 
 public class Document {
     private List<Line> lines;
@@ -28,6 +27,7 @@ public class Document {
 
     /**
      * Inserts a new line after the given line.
+     *
      * @param lineBefore The line to insert the new line after.
      */
     public void newLine(int lineBefore) {
@@ -54,6 +54,7 @@ public class Document {
 
     /**
      * Removes a line from the document.
+     *
      * @param line Line number
      */
     public void removeLine(int line) {
@@ -107,6 +108,7 @@ public class Document {
 
         /**
          * Returns the string length of the line.
+         *
          * @return
          */
         public int length() {

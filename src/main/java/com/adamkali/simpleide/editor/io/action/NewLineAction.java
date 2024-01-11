@@ -1,7 +1,6 @@
 package com.adamkali.simpleide.editor.io.action;
 
 import com.adamkali.simpleide.Global;
-import com.adamkali.simpleide.editor.lang.tokens.NewLineToken;
 
 /**
  * Inserts a new line at the current cursor position.

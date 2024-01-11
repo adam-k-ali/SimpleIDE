@@ -3,10 +3,9 @@ package com.adamkali.simpleide.editor;
 import com.adamkali.simpleide.Global;
 import com.adamkali.simpleide.editor.io.Document;
 import com.adamkali.simpleide.editor.io.action.ActionsList;
-import com.adamkali.simpleide.editor.lang.tokens.NewLineToken;
 import com.adamkali.simpleide.editor.lang.tokens.TabToken;
 import com.adamkali.simpleide.editor.lang.tokens.Token;
-import com.adamkali.simpleide.editor.lang.tokens.WhitespaceToken;
+import com.adamkali.simpleide.editor.lang.tokens.character.NewLineToken;
 
 import javax.swing.*;
 import java.awt.*;
@@ -44,6 +43,7 @@ public class CodeEditor extends JPanel implements Scrollable, KeyListener {
 
     /**
      * Gets the width of the string of the current line, up to a given column.
+     *
      * @param column The column to get the width up to.
      * @return The width of the string (in pixels).
      */
@@ -102,6 +102,7 @@ public class CodeEditor extends JPanel implements Scrollable, KeyListener {
     private void drawText(Graphics g) {
         int pxColumn = 0;
         int pxRow = Global.getLineHeight();
+        String textToRender;
         int stringWidth;
         for (Document.Line line : Global.getCursor().document.getLines()) {
             for (Token token : line.getTokens()) {
@@ -110,17 +111,23 @@ public class CodeEditor extends JPanel implements Scrollable, KeyListener {
                     // so we can just skip to the next line.
                     break;
                 }
-                stringWidth = Global.getStringWidth(token.getText());
+                if (token instanceof TabToken) {
+                    textToRender = "    ";
+                } else {
+                    textToRender = token.getText();
+                }
+
+                stringWidth = Global.getStringWidth(textToRender);
                 g.setColor(token.getBackgroundColor());
                 g.fillRect(LINE_NUM_WIDTH + MARGIN_LEFT + pxColumn, MARGIN_TOP + pxRow - Global.getLineHeight() + 2, stringWidth, Global.getLineHeight());
 
-                if (token.isUnderlined()) {
+                if (!token.isValid()) {
                     g.setColor(Color.RED);
                     g.drawLine(LINE_NUM_WIDTH + MARGIN_LEFT + pxColumn, MARGIN_TOP + pxRow, LINE_NUM_WIDTH + MARGIN_LEFT + pxColumn + stringWidth, MARGIN_TOP + pxRow);
                 }
 
                 g.setColor(token.getForegroundColor());
-                g.drawString(token.getText(), LINE_NUM_WIDTH + MARGIN_LEFT + pxColumn, MARGIN_TOP + pxRow);
+                g.drawString(textToRender, LINE_NUM_WIDTH + MARGIN_LEFT + pxColumn, MARGIN_TOP + pxRow);
                 pxColumn += stringWidth;
             }
             pxRow += Global.getLineHeight();
@@ -155,8 +162,20 @@ public class CodeEditor extends JPanel implements Scrollable, KeyListener {
             case KeyEvent.VK_BACK_SPACE:
                 ActionsList.BACKSPACE.execute();
                 break;
+            case KeyEvent.VK_TAB:
+//                ActionsList.TYPE_CHARACTER.execute('\t');
+//                // Move the cursor 3 additional spaces
+//                Global.getCursor().moveRight();
+//                Global.getCursor().moveRight();
+//                Global.getCursor().moveRight();
+//
+                ActionsList.TYPE_CHARACTER.execute(' ');
+                ActionsList.TYPE_CHARACTER.execute(' ');
+                ActionsList.TYPE_CHARACTER.execute(' ');
+                ActionsList.TYPE_CHARACTER.execute(' ');
+                break;
             default:
-                 ActionsList.TYPE_CHARACTER.execute(e.getKeyChar());
+                ActionsList.TYPE_CHARACTER.execute(e.getKeyChar());
                 break;
         }
 

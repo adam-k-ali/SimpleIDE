@@ -13,6 +13,6 @@ public class TabToken extends Token {
      * </p>
      */
     public TabToken() {
-        super(Color.WHITE, Color.BLACK, "    ");
+        super(Color.WHITE, Color.BLACK, "\t");
     }
 }
