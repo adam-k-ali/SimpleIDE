@@ -12,6 +12,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 
 public class CodeEditor extends JPanel implements Scrollable {
     private static final int LINE_NUM_WIDTH = 32;
@@ -33,6 +35,7 @@ public class CodeEditor extends JPanel implements Scrollable {
         super();
         // Setup listeners
         addKeyListener(new KeyboardHandler());
+        addMouseListener(new MouseHandler());
         setFocusable(true);
         setFocusTraversalKeysEnabled(false);
 
@@ -153,6 +156,31 @@ public class CodeEditor extends JPanel implements Scrollable {
         drawLineNumbers(g);
     }
 
+    @Override
+    public Dimension getPreferredScrollableViewportSize() {
+        return new Dimension(getSize().width, getSize().height);
+    }
+
+    @Override
+    public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
+        return orientation == SwingConstants.VERTICAL ? Global.getLineHeight() : CHARACTER_WIDTH;
+    }
+
+    @Override
+    public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) {
+        return orientation == SwingConstants.VERTICAL ? Global.getLineHeight() : CHARACTER_WIDTH;
+    }
+
+    @Override
+    public boolean getScrollableTracksViewportWidth() {
+        return false;
+    }
+
+    @Override
+    public boolean getScrollableTracksViewportHeight() {
+        return false;
+    }
+
     private static class KeyboardHandler implements KeyListener {
         // Keeps track of which keys are pressed
         private static boolean[] keys = new boolean[256];
@@ -218,28 +246,42 @@ public class CodeEditor extends JPanel implements Scrollable {
         }
     }
 
-    @Override
-    public Dimension getPreferredScrollableViewportSize() {
-        return new Dimension(getSize().width, getSize().height);
+    public class MouseHandler implements MouseListener {
+
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            int x = e.getX();
+            int y = e.getY();
+            int line = (y - MARGIN_TOP) / Global.getLineHeight();
+            int column = (x - LINE_NUM_WIDTH - MARGIN_LEFT) / CHARACTER_WIDTH;
+            line = Math.min(line, Global.getCursor().document.numberOfLines() - 1);
+            column = Math.min(column, Global.getCursor().document.getLine(line).length() - 1);
+            Global.getCursor().moveTo(column, line);
+            App.statusBar.repaint();
+            update();
+            repaint();
+        }
+
+        @Override
+        public void mousePressed(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mouseEntered(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mouseExited(MouseEvent e) {
+
+        }
     }
 
-    @Override
-    public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
-        return orientation == SwingConstants.VERTICAL ? Global.getLineHeight() : CHARACTER_WIDTH;
-    }
 
-    @Override
-    public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) {
-        return orientation == SwingConstants.VERTICAL ? Global.getLineHeight() : CHARACTER_WIDTH;
-    }
-
-    @Override
-    public boolean getScrollableTracksViewportWidth() {
-        return false;
-    }
-
-    @Override
-    public boolean getScrollableTracksViewportHeight() {
-        return false;
-    }
 }
