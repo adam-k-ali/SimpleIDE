@@ -3,8 +3,8 @@ package com.adamkali.simpleide.preferences;
 import java.awt.*;
 
 public class EditorColors {
-    public static final Color UNDEFINED_FG_COLOR = Color.BLACK;
-    public static final Color UNDEFINED_BG_COLOR = Color.WHITE;
+    public static final Color PLAINTEXT_FG_COLOR = Color.BLACK;
+    public static final Color PLAINTEXT_BG_COLOR = Color.WHITE;
 
     public static final Color OPERATOR_FG_COLOR = Color.BLACK;
     public static final Color OPERATOR_BG_COLOR = Color.WHITE;

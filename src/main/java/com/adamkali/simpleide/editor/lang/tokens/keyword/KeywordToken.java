@@ -1,8 +1,7 @@
-package com.adamkali.simpleide.editor.lang.tokens;
+package com.adamkali.simpleide.editor.lang.tokens.keyword;
 
+import com.adamkali.simpleide.editor.lang.tokens.Token;
 import com.adamkali.simpleide.preferences.EditorColors;
-
-import java.awt.*;
 
 public class KeywordToken extends Token {
     public KeywordToken(String text) {

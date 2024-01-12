@@ -1,5 +1,6 @@
 package com.adamkali.simpleide.editor.lang.tokens;
 
+import com.adamkali.simpleide.editor.lang.tokens.literal.LiteralTokenType;
 import org.apache.commons.lang.StringEscapeUtils;
 
 import java.awt.*;
@@ -38,6 +39,11 @@ public abstract class Token {
         isValid = valid;
     }
 
+    /**
+     * Returns the length of the token
+     *
+     * @return the length of the token
+     */
     public int length() {
         if (text == null) {
             return 0;
@@ -61,10 +67,10 @@ public abstract class Token {
      */
     @Override
     public String toString() {
-        if (text == null) {
+        if (this instanceof IdentifierToken || this instanceof LiteralTokenType) {
+            return this.getClass().getSimpleName() + " [text = \"" + StringEscapeUtils.escapeJava(text) + "\"]";
+        } else {
             return this.getClass().getSimpleName();
         }
-
-        return this.getClass().getSimpleName() + " [text = \"" + StringEscapeUtils.escapeJava(text) + "\"]";
     }
 }
