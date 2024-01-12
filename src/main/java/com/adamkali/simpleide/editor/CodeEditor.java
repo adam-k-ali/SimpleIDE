@@ -12,7 +12,7 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
-public class CodeEditor extends JPanel implements Scrollable, KeyListener {
+public class CodeEditor extends JPanel implements Scrollable {
     private static final int LINE_NUM_WIDTH = 32;
     private static final int MARGIN_LEFT = 8;
     private static final int MARGIN_TOP = 4;
@@ -31,7 +31,7 @@ public class CodeEditor extends JPanel implements Scrollable, KeyListener {
     public CodeEditor() {
         super();
         // Setup listeners
-        addKeyListener(this);
+        addKeyListener(new KeyboardHandler());
         setFocusable(true);
         setFocusTraversalKeysEnabled(false);
 
@@ -152,59 +152,60 @@ public class CodeEditor extends JPanel implements Scrollable, KeyListener {
         drawLineNumbers(g);
     }
 
+    private static class KeyboardHandler implements KeyListener {
+        // Keeps track of which keys are pressed
+        private static boolean[] keys = new boolean[256];
 
-    @Override
-    public void keyTyped(KeyEvent e) {
-        switch (e.getKeyChar()) {
-            case KeyEvent.VK_ENTER:
-                ActionsList.NEW_LINE.execute();
-                break;
-            case KeyEvent.VK_BACK_SPACE:
-                ActionsList.BACKSPACE.execute();
-                break;
-            case KeyEvent.VK_TAB:
-//                ActionsList.TYPE_CHARACTER.execute('\t');
-//                // Move the cursor 3 additional spaces
-//                Global.getCursor().moveRight();
-//                Global.getCursor().moveRight();
-//                Global.getCursor().moveRight();
-//
-                ActionsList.TYPE_CHARACTER.execute(' ');
-                ActionsList.TYPE_CHARACTER.execute(' ');
-                ActionsList.TYPE_CHARACTER.execute(' ');
-                ActionsList.TYPE_CHARACTER.execute(' ');
-                break;
-            default:
-                ActionsList.TYPE_CHARACTER.execute(e.getKeyChar());
-                break;
+        // The number of spaces to insert when the tab key is pressed
+        private static final int TAB_WIDTH = 4;
+
+        @Override
+        public void keyTyped(KeyEvent e) {
+            switch (e.getKeyChar()) {
+                case KeyEvent.VK_ENTER:
+                    ActionsList.NEW_LINE.execute();
+                    break;
+                case KeyEvent.VK_BACK_SPACE:
+                    ActionsList.BACKSPACE.execute();
+                    break;
+                case KeyEvent.VK_TAB:
+                    for (int i = 0; i < TAB_WIDTH; i++) {
+                        ActionsList.TYPE_CHARACTER.execute(' ');
+                    }
+                    break;
+                default:
+                    ActionsList.TYPE_CHARACTER.execute(e.getKeyChar());
+                    break;
+            }
+
         }
 
-    }
-
-    @Override
-    public void keyPressed(KeyEvent e) {
+        @Override
+        public void keyPressed(KeyEvent e) {
 //        expandCanvas(getFontMetrics(getFont()));
-        switch (e.getKeyCode()) {
-            case KeyEvent.VK_LEFT:
-                Global.getCursor().moveLeft();
-                break;
-            case KeyEvent.VK_RIGHT:
-                Global.getCursor().moveRight();
-                break;
-            case KeyEvent.VK_UP:
-                Global.getCursor().moveUp();
-                break;
-            case KeyEvent.VK_DOWN:
-                Global.getCursor().moveDown();
-                break;
-            default:
-                break;
+            keys[e.getKeyCode()] = true;
+            switch (e.getKeyCode()) {
+                case KeyEvent.VK_LEFT:
+                    Global.getCursor().moveLeft();
+                    break;
+                case KeyEvent.VK_RIGHT:
+                    Global.getCursor().moveRight();
+                    break;
+                case KeyEvent.VK_UP:
+                    Global.getCursor().moveUp();
+                    break;
+                case KeyEvent.VK_DOWN:
+                    Global.getCursor().moveDown();
+                    break;
+                default:
+                    break;
+            }
         }
-    }
 
-    @Override
-    public void keyReleased(KeyEvent e) {
-
+        @Override
+        public void keyReleased(KeyEvent e) {
+            keys[e.getKeyCode()] = false;
+        }
     }
 
     @Override
