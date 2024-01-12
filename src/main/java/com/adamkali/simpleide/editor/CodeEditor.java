@@ -174,6 +174,9 @@ public class CodeEditor extends JPanel implements Scrollable {
                     }
                     break;
                 default:
+                    if (e.getKeyChar() < 32) {
+                        break;
+                    }
                     ActionsList.TYPE_CHARACTER.execute(e.getKeyChar());
                     break;
             }
@@ -182,7 +185,6 @@ public class CodeEditor extends JPanel implements Scrollable {
 
         @Override
         public void keyPressed(KeyEvent e) {
-//        expandCanvas(getFontMetrics(getFont()));
             keys[e.getKeyCode()] = true;
             switch (e.getKeyCode()) {
                 case KeyEvent.VK_LEFT:
@@ -196,6 +198,12 @@ public class CodeEditor extends JPanel implements Scrollable {
                     break;
                 case KeyEvent.VK_DOWN:
                     Global.getCursor().moveDown();
+                    break;
+
+                case KeyEvent.VK_D:
+                    if (keys[KeyEvent.VK_CONTROL]) {
+                        ActionsList.DUPLICATE_LINE.execute();
+                    }
                     break;
                 default:
                     break;

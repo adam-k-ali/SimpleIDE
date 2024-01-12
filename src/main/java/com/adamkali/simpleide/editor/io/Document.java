@@ -14,15 +14,17 @@ public class Document {
         lines = new ArrayList<>() {{
             add(new Line());
         }};
-//        lines = new ArrayList<>() {{
-//            add(new Line() {{ addToken(new NewLineToken()); }});
-//            add(new Line() {{ addToken(new SLCommentToken("// This is a comment")); addToken(new NewLineToken());  }});
-//            add(new Line() {{ addToken(new KeywordToken("for")); addToken(new WhitespaceToken()); addToken(new UndefinedToken("test")); }});
-//        }};
     }
 
     public List<Line> getLines() {
         return lines;
+    }
+
+    public void insertLine(int line, Document.Line lineToInsert) {
+        if (line < 0 || line >= numberOfLines() + 1) {
+            throw new IndexOutOfBoundsException("Line index out of bounds");
+        }
+        lines.add(line, lineToInsert);
     }
 
     /**

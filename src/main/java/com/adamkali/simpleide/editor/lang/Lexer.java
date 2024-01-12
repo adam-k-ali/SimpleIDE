@@ -296,7 +296,6 @@ public class Lexer {
             }
         }
 
-        System.out.println(tokens);
         return tokens;
     }
 

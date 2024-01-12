@@ -5,7 +5,6 @@ import com.adamkali.simpleide.Global;
 public class BackspaceAction extends Action {
     @Override
     public void execute(Object... args) {
-        System.out.println("BackspaceAction.execute()");
         // Don't allow backspace if we're on the first, empty line.
         if (Global.getCursor().getCurrentColumn() == 0 && Global.getCursor().getCurrentLine() == 0) {
             return;

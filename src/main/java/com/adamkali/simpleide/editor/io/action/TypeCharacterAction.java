@@ -5,7 +5,6 @@ import com.adamkali.simpleide.Global;
 public class TypeCharacterAction extends Action {
     @Override
     public void execute(Object... args) {
-        System.out.println("TypeCharacterAction.execute()");
         if (args.length != 1) {
             throw new IllegalArgumentException("TypeCharacterAction requires one argument");
         }
