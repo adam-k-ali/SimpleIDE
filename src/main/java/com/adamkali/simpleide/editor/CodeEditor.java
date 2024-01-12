@@ -137,7 +137,7 @@ public class CodeEditor extends JPanel implements Scrollable, KeyListener {
 
     @Override
     protected void paintComponent(Graphics g) {
-//        super.paintComponent(g);
+        super.paintComponent(g);
         g.setFont(Global.getFont());
         g.setColor(Color.BLACK);
 
