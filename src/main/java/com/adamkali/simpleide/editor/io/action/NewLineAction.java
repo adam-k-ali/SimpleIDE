@@ -18,5 +18,12 @@ public class NewLineAction extends Action {
         }
         Global.getCursor().moveDown();
         Global.getCursor().moveToStartOfLine();
+
+        // Make the new line have the same indentation as the previous line
+        int indent = Global.getCursor().document.getLine(Global.getCursor().getCurrentLine() - 1).indentations();
+        for (int i = 0; i < indent; i++) {
+            Global.getCursor().document.getLine(Global.getCursor().getCurrentLine()).append(" ");
+            Global.getCursor().moveRight();
+        }
     }
 }

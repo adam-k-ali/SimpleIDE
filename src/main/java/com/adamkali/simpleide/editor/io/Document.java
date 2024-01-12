@@ -3,6 +3,7 @@ package com.adamkali.simpleide.editor.io;
 import com.adamkali.simpleide.editor.lang.Lexer;
 import com.adamkali.simpleide.editor.lang.tokens.Token;
 import com.adamkali.simpleide.editor.lang.tokens.character.NewLineToken;
+import com.adamkali.simpleide.editor.lang.tokens.character.WhitespaceToken;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,6 +76,19 @@ public class Document {
 
         public Line() {
             tokens = new ArrayList<>();
+        }
+
+        public int indentations() {
+            int indentations = 0;
+            for (Token token : tokens) {
+                if (token instanceof WhitespaceToken) {
+                    indentations++;
+                } else {
+                    break;
+                }
+
+            }
+            return indentations;
         }
 
         public List<Token> getTokens() {

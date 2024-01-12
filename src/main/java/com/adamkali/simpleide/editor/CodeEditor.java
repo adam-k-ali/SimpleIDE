@@ -264,12 +264,10 @@ public class CodeEditor extends JPanel implements Scrollable {
 
         @Override
         public void mousePressed(MouseEvent e) {
-
         }
 
         @Override
         public void mouseReleased(MouseEvent e) {
-
         }
 
         @Override
