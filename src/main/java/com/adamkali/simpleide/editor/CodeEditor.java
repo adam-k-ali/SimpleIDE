@@ -1,5 +1,6 @@
 package com.adamkali.simpleide.editor;
 
+import com.adamkali.simpleide.App;
 import com.adamkali.simpleide.Global;
 import com.adamkali.simpleide.editor.io.Document;
 import com.adamkali.simpleide.editor.io.action.ActionsList;
@@ -161,6 +162,7 @@ public class CodeEditor extends JPanel implements Scrollable {
 
         @Override
         public void keyTyped(KeyEvent e) {
+            App.statusBar.repaint();
             switch (e.getKeyChar()) {
                 case KeyEvent.VK_ENTER:
                     ActionsList.NEW_LINE.execute();

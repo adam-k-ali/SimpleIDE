@@ -8,6 +8,7 @@ import java.awt.*;
 
 public class App {
     private JFrame mainWindow;
+    public static StatusBar statusBar;
 
     /**
      * Creates the JFrame and sets the size and title
@@ -24,6 +25,7 @@ public class App {
         mainWindow.setSize(800, 600);
         mainWindow.setLocationRelativeTo(null);
 
+        statusBar = new StatusBar();
 
         run();
     }
@@ -55,7 +57,7 @@ public class App {
         layout.gridy = 0;
         mainPanel.add(scrollPane, layout);
 
-        StatusBar statusBar = new StatusBar();
+//        StatusBar statusBar = new StatusBar();
         statusBar.setBounds(0, 0, mainWindow.getWidth(), StatusBar.STATUS_BAR_HEIGHT);
         statusBar.setPreferredSize(new Dimension(mainWindow.getWidth(), StatusBar.STATUS_BAR_HEIGHT));
 
