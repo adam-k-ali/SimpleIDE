@@ -19,6 +19,6 @@ public class StatusBar extends JComponent {
         g.fillRect(0, 0, getWidth(), getHeight());
         g.setColor(Color.BLACK);
         g.drawString("SimpleIDE", MARGIN_LEFT, MARGIN_TOP + LINE_HEIGHT / 2);
-        g.drawString(String.format("Line: %d, Column: %d", Global.getCursor().getCurrentLine() + 1, Global.getCursor().getCurrentColumn() + 1), getWidth() - 200, MARGIN_TOP + LINE_HEIGHT / 2);
+        g.drawString(String.format("Line: %d, Column: %d", Global.getCursor().getCurrentLine(), Global.getCursor().getCurrentColumn()), getWidth() - 200, MARGIN_TOP + LINE_HEIGHT / 2);
     }
 }

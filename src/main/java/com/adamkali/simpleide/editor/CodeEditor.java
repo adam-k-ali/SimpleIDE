@@ -2,18 +2,17 @@ package com.adamkali.simpleide.editor;
 
 import com.adamkali.simpleide.App;
 import com.adamkali.simpleide.Global;
+import com.adamkali.simpleide.editor.io.EditorCursor;
 import com.adamkali.simpleide.editor.io.Document;
 import com.adamkali.simpleide.editor.io.action.ActionsList;
 import com.adamkali.simpleide.editor.lang.tokens.TabToken;
 import com.adamkali.simpleide.editor.lang.tokens.Token;
 import com.adamkali.simpleide.editor.lang.tokens.character.NewLineToken;
+import com.adamkali.simpleide.preferences.EditorColors;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.*;
 
 public class CodeEditor extends JPanel implements Scrollable {
     private static final int LINE_NUM_WIDTH = 32;
@@ -35,7 +34,9 @@ public class CodeEditor extends JPanel implements Scrollable {
         super();
         // Setup listeners
         addKeyListener(new KeyboardHandler());
-        addMouseListener(new MouseHandler());
+        MouseHandler mouseHandler = new MouseHandler();
+        addMouseListener(mouseHandler);
+        addMouseMotionListener(mouseHandler);
         setFocusable(true);
         setFocusTraversalKeysEnabled(false);
 
@@ -139,6 +140,38 @@ public class CodeEditor extends JPanel implements Scrollable {
         }
     }
 
+    private void drawSelectionOverlay(Graphics g) {
+        EditorCursor.TextPosition selectionStart = Global.getCursor().getSelectionStart();
+        EditorCursor.TextPosition selectionEnd = Global.getCursor().getSelectionEnd();
+
+        if (selectionStart == null || selectionEnd == null) {
+            return;
+        }
+
+        EditorCursor.TextPosition from = selectionStart.compareTo(selectionEnd) < 0 ? selectionStart : selectionEnd;
+        EditorCursor.TextPosition to = selectionStart.compareTo(selectionEnd) < 0 ? selectionEnd : selectionStart;
+
+        if (from.line == to.line) {
+            int stringWidth = Global.getStringWidth(Global.getCursor().document.getLine(from.line).substring(from.column, to.column));
+            g.setColor(EditorColors.SELECTION_COLOR);
+            g.fillRect(LINE_NUM_WIDTH + MARGIN_LEFT + Global.getStringWidth(Global.getCursor().document.getLine(from.line).substring(0, from.column)),
+                    MARGIN_TOP + from.line * Global.getLineHeight() + 2, stringWidth, Global.getLineHeight());
+        } else {
+            int stringWidth = Global.getStringWidth(Global.getCursor().document.getLine(from.line).substring(from.column, Global.getCursor().document.getLine(from.line).length()));
+            g.setColor(EditorColors.SELECTION_COLOR);
+            g.fillRect(LINE_NUM_WIDTH + MARGIN_LEFT + Global.getStringWidth(Global.getCursor().document.getLine(from.line).substring(0, from.column)),
+                    MARGIN_TOP + from.line * Global.getLineHeight() + 2, stringWidth, Global.getLineHeight());
+
+            for (int i = from.line + 1; i < to.line; i++) {
+                stringWidth = Global.getStringWidth(Global.getCursor().document.getLine(i).toString());
+                g.fillRect(LINE_NUM_WIDTH + MARGIN_LEFT, MARGIN_TOP + i * Global.getLineHeight() + 2, stringWidth, Global.getLineHeight());
+            }
+
+            stringWidth = Global.getStringWidth(Global.getCursor().document.getLine(to.line).substring(0, to.column));
+            g.fillRect(LINE_NUM_WIDTH + MARGIN_LEFT, MARGIN_TOP + to.line * Global.getLineHeight() + 2, stringWidth, Global.getLineHeight());
+        }
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -146,6 +179,7 @@ public class CodeEditor extends JPanel implements Scrollable {
         g.setColor(Color.BLACK);
 
         drawText(g);
+        drawSelectionOverlay(g);
 
         // Draw cursor
         if (cursorVisible) {
@@ -191,6 +225,7 @@ public class CodeEditor extends JPanel implements Scrollable {
         @Override
         public void keyTyped(KeyEvent e) {
             App.statusBar.repaint();
+            Global.getCursor().clearSelection();
             switch (e.getKeyChar()) {
                 case KeyEvent.VK_ENTER:
                     ActionsList.NEW_LINE.execute();
@@ -218,15 +253,19 @@ public class CodeEditor extends JPanel implements Scrollable {
             keys[e.getKeyCode()] = true;
             switch (e.getKeyCode()) {
                 case KeyEvent.VK_LEFT:
+                    Global.getCursor().clearSelection();
                     Global.getCursor().moveLeft();
                     break;
                 case KeyEvent.VK_RIGHT:
+                    Global.getCursor().clearSelection();
                     Global.getCursor().moveRight();
                     break;
                 case KeyEvent.VK_UP:
+                    Global.getCursor().clearSelection();
                     Global.getCursor().moveUp();
                     break;
                 case KeyEvent.VK_DOWN:
+                    Global.getCursor().clearSelection();
                     Global.getCursor().moveDown();
                     break;
 
@@ -246,16 +285,37 @@ public class CodeEditor extends JPanel implements Scrollable {
         }
     }
 
-    public class MouseHandler implements MouseListener {
+    public class MouseHandler implements MouseListener, MouseMotionListener {
+        private int firstX;
+        private int firstY;
+        private int lastX;
+        private int lastY;
+
+        private int getLine(int y) {
+            int line = (y - MARGIN_TOP) / Global.getLineHeight();
+            if (line < 0) {
+                return 0;
+            }
+            return Math.min(line, Global.getCursor().document.numberOfLines() - 1);
+        }
+
+        private int getColumn(int x, int line) {
+            int column = (x - LINE_NUM_WIDTH - MARGIN_LEFT) / CHARACTER_WIDTH;
+            if (column < 0) {
+                return 0;
+            }
+            return Math.min(column, Global.getCursor().document.getLine(line).length());
+        }
+
 
         @Override
         public void mouseClicked(MouseEvent e) {
+            Global.getCursor().clearSelection();
+
             int x = e.getX();
             int y = e.getY();
-            int line = (y - MARGIN_TOP) / Global.getLineHeight();
-            int column = (x - LINE_NUM_WIDTH - MARGIN_LEFT) / CHARACTER_WIDTH;
-            line = Math.min(line, Global.getCursor().document.numberOfLines() - 1);
-            column = Math.min(column, Global.getCursor().document.getLine(line).length() - 1);
+            int line = getLine(y);
+            int column = getColumn(x, line);
             Global.getCursor().moveTo(column, line);
             App.statusBar.repaint();
             update();
@@ -264,6 +324,10 @@ public class CodeEditor extends JPanel implements Scrollable {
 
         @Override
         public void mousePressed(MouseEvent e) {
+            firstX = e.getX();
+            firstY = e.getY();
+            lastX = e.getX();
+            lastY = e.getY();
         }
 
         @Override
@@ -272,11 +336,39 @@ public class CodeEditor extends JPanel implements Scrollable {
 
         @Override
         public void mouseEntered(MouseEvent e) {
-
+            Cursor cursor = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR);
+            setCursor(cursor);
+//            c.setBorder(highlighted);
+//            entered = c;
         }
 
         @Override
         public void mouseExited(MouseEvent e) {
+            Cursor cursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR);
+            setCursor(cursor);
+        }
+
+        @Override
+        public void mouseDragged(MouseEvent e) {
+            lastX = e.getX();
+            lastY = e.getY();
+            // Print range of selected text
+            int firstLine = getLine(firstY);
+            int firstColumn = getColumn(firstX, firstLine);
+
+            int lastLine = getLine(lastY);
+            int lastColumn = getColumn(lastX, lastLine);
+
+            Global.getCursor().setSelection(new EditorCursor.TextPosition(firstColumn, firstLine), new EditorCursor.TextPosition(lastColumn, lastLine));
+            Global.getCursor().moveTo(lastColumn, lastLine);
+
+            App.statusBar.repaint();
+            update();
+            repaint();
+        }
+
+        @Override
+        public void mouseMoved(MouseEvent e) {
 
         }
     }

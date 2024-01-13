@@ -43,7 +43,7 @@ public class Document {
 
     public Line getLine(int line) {
         if (line < 0 || line >= numberOfLines()) {
-            throw new IndexOutOfBoundsException("Line index out of bounds");
+            throw new IndexOutOfBoundsException(String.format("Line index out of bounds (line: %d, numberOfLines: %d)", line, numberOfLines()));
         }
         return lines.get(line);
     }
@@ -145,7 +145,7 @@ public class Document {
 
         public String substring(int start, int end) {
             if (start < 0 || end < 0 || start > end || end > length()) {
-                throw new IndexOutOfBoundsException("Index out of bounds");
+                throw new IndexOutOfBoundsException(String.format("Index out of bounds (start: %d, end: %d)", start, end));
             }
             return toString().substring(start, end);
         }
