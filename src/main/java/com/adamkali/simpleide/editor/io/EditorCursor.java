@@ -1,5 +1,7 @@
 package com.adamkali.simpleide.editor.io;
 
+import com.adamkali.simpleide.App;
+
 /**
  * The cursor is responsible for moving around the document.
  * Cursor keeps track of three things:
@@ -42,6 +44,8 @@ public class EditorCursor {
                 moveToEndOfLine();
             }
         }
+
+        App.statusBar.repaint();
     }
 
     /**
@@ -59,6 +63,8 @@ public class EditorCursor {
                 moveToEndOfLine();
             }
         }
+
+        App.statusBar.repaint();
     }
 
     /**
@@ -76,6 +82,8 @@ public class EditorCursor {
             moveUp();
             moveToEndOfLine();
         }
+
+        App.statusBar.repaint();
     }
 
     /**
@@ -92,22 +100,31 @@ public class EditorCursor {
             moveDown();
             moveToStartOfLine();
         }
+
+        App.statusBar.repaint();
     }
 
     public void moveToStartOfLine() {
         currentColumn = 0;
+
+        App.statusBar.repaint();
     }
 
     public void moveToEndOfLine() {
         currentColumn = document.getLine(currentLine).length();
+
+        App.statusBar.repaint();
     }
 
     public void moveTo(int column, int row) {
         if (column < 0 || row < 0) {
             throw new IllegalArgumentException("Column and row must be positive");
         }
+
         this.currentColumn = column;
         this.currentLine = row;
+
+        App.statusBar.repaint();
     }
 
     public void moveBy(int column, int row) {
@@ -116,6 +133,8 @@ public class EditorCursor {
         }
         this.currentColumn += column;
         this.currentLine += row;
+
+        App.statusBar.repaint();
     }
 
     public int getCurrentColumn() {

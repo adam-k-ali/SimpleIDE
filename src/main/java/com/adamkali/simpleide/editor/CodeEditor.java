@@ -224,7 +224,6 @@ public class CodeEditor extends JPanel implements Scrollable {
 
         @Override
         public void keyTyped(KeyEvent e) {
-            App.statusBar.repaint();
             Global.getCursor().clearSelection();
             switch (e.getKeyChar()) {
                 case KeyEvent.VK_ENTER:
@@ -317,7 +316,6 @@ public class CodeEditor extends JPanel implements Scrollable {
             int line = getLine(y);
             int column = getColumn(x, line);
             Global.getCursor().moveTo(column, line);
-            App.statusBar.repaint();
             update();
             repaint();
         }
@@ -362,7 +360,7 @@ public class CodeEditor extends JPanel implements Scrollable {
             Global.getCursor().setSelection(new EditorCursor.TextPosition(firstColumn, firstLine), new EditorCursor.TextPosition(lastColumn, lastLine));
             Global.getCursor().moveTo(lastColumn, lastLine);
 
-            App.statusBar.repaint();
+
             update();
             repaint();
         }
