@@ -15,7 +15,7 @@ import java.awt.*;
 import java.awt.event.*;
 
 public class CodeEditor extends JPanel implements Scrollable {
-    private static final int LINE_NUM_WIDTH = 32;
+    private static final int LINE_NUM_WIDTH = 64;
     private static final int MARGIN_LEFT = 8;
     private static final int MARGIN_TOP = 4;
     private static final int CHARACTER_WIDTH = 8;
