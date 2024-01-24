@@ -1,5 +1,6 @@
 package com.adamkali.simpleide;
 
+import com.adamkali.simpleide.browser.ProjectBrowser;
 import com.adamkali.simpleide.editor.CodeEditor;
 import com.adamkali.simpleide.editor.StatusBar;
 
@@ -9,6 +10,7 @@ import java.awt.*;
 public class App {
     private JFrame mainWindow;
     public static StatusBar statusBar;
+    private static CodeEditor codeEditor;
 
     /**
      * Creates the JFrame and sets the size and title
@@ -30,21 +32,28 @@ public class App {
         run();
     }
 
-    public void run() {
-        JPanel mainPanel = new JPanel(new GridBagLayout());
+    private JPanel editorPanel() {
+        JPanel editorPanel = new JPanel(new GridBagLayout());
         GridBagConstraints layout = new GridBagConstraints();
-
-        // Make the panel take up the entire window
         layout.fill = GridBagConstraints.BOTH;
-        mainPanel.setPreferredSize(new Dimension(mainWindow.getWidth(), mainWindow.getHeight()));
+        editorPanel.setPreferredSize(new Dimension(mainWindow.getWidth(), mainWindow.getHeight()));
 
-        CodeEditor codeEditor = new CodeEditor();
+        // Create ProjectBrowser
+        ProjectBrowser projectBrowser = new ProjectBrowser();
+        projectBrowser.setPreferredSize(new Dimension(100, 800));
+
+        layout.weightx = 0.2;
+        layout.weighty = 1;
+        layout.gridx = 0;
+        layout.gridy = 0;
+        editorPanel.add(projectBrowser, layout);
+
+        // Create CodeEditor
+        codeEditor = new CodeEditor();
         codeEditor.setPreferredSize(new Dimension(800, 800));
 
         JViewport viewport = new JViewport();
         viewport.setView(codeEditor);
-//        viewport.setViewSize(new Dimension(800, 800));
-//        viewport.setBounds(0, 0, 800, 800);
 
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setViewport(viewport);
@@ -53,21 +62,38 @@ public class App {
 
         layout.weightx = 1;
         layout.weighty = 1;
-        layout.gridx = 0;
+        layout.gridx = 1;
         layout.gridy = 0;
-        mainPanel.add(scrollPane, layout);
+        editorPanel.add(scrollPane, layout);
+        return editorPanel;
+    }
 
-//        StatusBar statusBar = new StatusBar();
-        statusBar.setBounds(0, 0, mainWindow.getWidth(), StatusBar.STATUS_BAR_HEIGHT);
+    private JPanel statusPanel() {
+        JPanel statusPanel = new JPanel();
+        statusPanel.setPreferredSize(new Dimension(mainWindow.getWidth(), StatusBar.STATUS_BAR_HEIGHT));
         statusBar.setPreferredSize(new Dimension(mainWindow.getWidth(), StatusBar.STATUS_BAR_HEIGHT));
 
-        layout.weightx = 1;
-        layout.weighty = 0.05;
-        layout.gridx = 0;
-        layout.gridy = 1;
-        mainPanel.add(statusBar, layout);
+        statusPanel.add(statusBar);
+        return statusPanel;
+    }
 
-        mainWindow.add(mainPanel);
+    /**
+     * Creates the main panel and adds it to the JFrame
+     * Has the following layout:
+     * +----------------+----------------+
+     * | Options                         |
+     * |Project Browser|    Code Editor  |
+     * | Status Bar                       |
+     * +----------------+----------------+
+     */
+    public void run() {
+        JPanel container = new JPanel();
+        container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
+
+        container.add(editorPanel());
+        container.add(statusPanel());
+
+        mainWindow.add(container);
 
         // Set mainWindow to be visible
         mainWindow.setVisible(true);
@@ -89,6 +115,7 @@ public class App {
 
     /**
      * Main method
+     *
      * @param args
      */
     public static void main(String[] args) {
