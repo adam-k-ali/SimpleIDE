@@ -1,5 +1,7 @@
 package com.adamkali.simpleide.editor.io;
 
+import com.adamkali.simpleide.App;
+
 /**
  * The cursor is responsible for moving around the document.
  * Cursor keeps track of three things:
@@ -7,17 +9,21 @@ package com.adamkali.simpleide.editor.io;
  * 2. The current line
  * 3. The document
  */
-public class Cursor {
+public class EditorCursor {
     private int currentColumn;
     private int currentLine;
 
     public Document document;
 
-    public Cursor(Document document) {
+    private TextPosition selectionStart;
+    private TextPosition selectionEnd;
+
+
+    public EditorCursor(Document document) {
         this(document, 0, 0);
     }
 
-    public Cursor(Document document, int column, int currentLine) {
+    public EditorCursor(Document document, int column, int currentLine) {
         this.document = new Document();
         this.currentColumn = column;
         this.currentLine = currentLine;
@@ -38,6 +44,8 @@ public class Cursor {
                 moveToEndOfLine();
             }
         }
+
+        App.statusBar.repaint();
     }
 
     /**
@@ -55,6 +63,8 @@ public class Cursor {
                 moveToEndOfLine();
             }
         }
+
+        App.statusBar.repaint();
     }
 
     /**
@@ -72,6 +82,8 @@ public class Cursor {
             moveUp();
             moveToEndOfLine();
         }
+
+        App.statusBar.repaint();
     }
 
     /**
@@ -88,22 +100,31 @@ public class Cursor {
             moveDown();
             moveToStartOfLine();
         }
+
+        App.statusBar.repaint();
     }
 
     public void moveToStartOfLine() {
         currentColumn = 0;
+
+        App.statusBar.repaint();
     }
 
     public void moveToEndOfLine() {
         currentColumn = document.getLine(currentLine).length();
+
+        App.statusBar.repaint();
     }
 
     public void moveTo(int column, int row) {
         if (column < 0 || row < 0) {
             throw new IllegalArgumentException("Column and row must be positive");
         }
+
         this.currentColumn = column;
         this.currentLine = row;
+
+        App.statusBar.repaint();
     }
 
     public void moveBy(int column, int row) {
@@ -112,6 +133,8 @@ public class Cursor {
         }
         this.currentColumn += column;
         this.currentLine += row;
+
+        App.statusBar.repaint();
     }
 
     public int getCurrentColumn() {
@@ -128,6 +151,87 @@ public class Cursor {
 
     public String getTextAfterCursor() {
         return document.getLine(currentLine).substring(currentColumn, document.getLine(currentLine).length());
+    }
+
+    public void setSelection(TextPosition start, TextPosition end) {
+        this.selectionStart = start;
+        this.selectionEnd = end;
+    }
+
+    public void clearSelection() {
+        this.selectionStart = null;
+        this.selectionEnd = null;
+    }
+
+    public String getSelectedText() {
+        if (selectionStart == null || selectionEnd == null) {
+            return null;
+        }
+        if (selectionStart.line == selectionEnd.line) {
+            return document.getLine(selectionStart.line).substring(selectionStart.column, selectionEnd.column);
+        } else {
+            TextPosition from = selectionStart.compareTo(selectionEnd) < 0 ? selectionStart : selectionEnd;
+            TextPosition to = selectionStart.compareTo(selectionEnd) < 0 ? selectionEnd : selectionStart;
+
+            String text = document.getLine(from.line).substring(from.column, document.getLine(from.line).length());
+            for (int i = from.line + 1; i < to.line; i++) {
+                text += document.getLine(i);
+                text += "\n";
+            }
+            text += document.getLine(to.line).substring(0, to.column);
+            return text;
+        }
+    }
+
+    public TextPosition getSelectionStart() {
+        return selectionStart;
+    }
+
+    public TextPosition getSelectionEnd() {
+        return selectionEnd;
+    }
+
+    public static class TextPosition implements Comparable<TextPosition> {
+        public int column;
+        public int line;
+
+        public TextPosition(int column, int line) {
+            this.column = column;
+            this.line = line;
+        }
+
+        public boolean equals(Object o) {
+            if (o == this) {
+                return true;
+            }
+            if (!(o instanceof TextPosition)) {
+                return false;
+            }
+            TextPosition other = (TextPosition) o;
+            return this.column == other.column && this.line == other.line;
+        }
+
+        @Override
+        public String toString() {
+            return "TextPosition{" +
+                    "column=" + column +
+                    ", line=" + line +
+                    '}';
+        }
+
+        @Override
+        public int compareTo(TextPosition o) {
+            if (this.line < o.line) {
+                return -1;
+            } else if (this.line > o.line) {
+                return 1;
+            } else if (this.column < o.column) {
+                return -1;
+            } else if (this.column > o.column) {
+                return 1;
+            }
+            return 0;
+        }
     }
 
 }

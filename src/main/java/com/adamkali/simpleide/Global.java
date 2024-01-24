@@ -1,6 +1,6 @@
 package com.adamkali.simpleide;
 
-import com.adamkali.simpleide.editor.io.Cursor;
+import com.adamkali.simpleide.editor.io.EditorCursor;
 import com.adamkali.simpleide.editor.io.Document;
 
 import java.awt.*;
@@ -11,7 +11,7 @@ public class Global {
     private static int line_num_width = 32;
     private static Font font = new Font("Monospaced", Font.PLAIN, 12);
 
-    private static Cursor cursor = new Cursor(new Document());
+    private static EditorCursor editorCursor = new EditorCursor(new Document());
 
     public static int getMarginTop() {
         return margin_top;
@@ -25,12 +25,12 @@ public class Global {
         return line_num_width;
     }
 
-    public static void setCursor(Cursor cursor) {
-        Global.cursor = cursor;
+    public static void setCursor(EditorCursor editorCursor) {
+        Global.editorCursor = editorCursor;
     }
 
-    public static Cursor getCursor() {
-        return cursor;
+    public static EditorCursor getCursor() {
+        return editorCursor;
     }
 
     public static int getLineHeight() {
