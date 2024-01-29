@@ -1,14 +1,13 @@
 package com.adamkali.simpleide.editor;
 
-import com.adamkali.simpleide.App;
 import com.adamkali.simpleide.Global;
-import com.adamkali.simpleide.editor.io.EditorCursor;
-import com.adamkali.simpleide.editor.io.Document;
+import com.adamkali.simpleide.editor.io.Line;
+import com.adamkali.simpleide.editor.io.TextPosition;
 import com.adamkali.simpleide.editor.io.action.ActionsList;
-import com.adamkali.simpleide.editor.lang.tokens.TabToken;
-import com.adamkali.simpleide.editor.lang.tokens.Token;
-import com.adamkali.simpleide.editor.lang.tokens.character.NewLineToken;
 import com.adamkali.simpleide.preferences.EditorColors;
+import com.adamkali.simpleide.project.lang.tokens.NewLineToken;
+import com.adamkali.simpleide.project.lang.tokens.TabToken;
+import com.adamkali.simpleide.project.lang.tokens.Token;
 
 import javax.swing.*;
 import java.awt.*;
@@ -20,7 +19,7 @@ public class CodeEditor extends JPanel implements Scrollable {
     private static final int MARGIN_TOP = 4;
     private static final int CHARACTER_WIDTH = 8;
 
-    private static final int CURSOR_OFFSET_X = 1;
+    private static final int CURSOR_OFFSET_X = 0;
     private static final int CURSOR_OFFSET_Y = 4;
     private static final int CURSOR_HEIGHT = 16;
     private static final long CURSOR_PERIOD = 500L;
@@ -53,17 +52,17 @@ public class CodeEditor extends JPanel implements Scrollable {
      * @return The width of the string (in pixels).
      */
     private int getStringWidthUpToColumn(int column) {
-        return Global.getStringWidth(Global.getCursor().document.getLine(Global.getCursor().getCurrentLine()).substring(0, column));
+        return Global.getStringWidth(Global.getCursor().getDocument().getLine(Global.getCursor().getLine()).substring(0, column));
     }
 
     private void expandCanvas(FontMetrics fontMetrics) {
-        int numberOfLines = Global.getCursor().document.numberOfLines();
+        int numberOfLines = Global.getCursor().getDocument().getLineCount();
 
         int documentHeight = (numberOfLines + 6) * Global.getLineHeight();
         int documentWidth = 800;
 
         for (int i = 0; i < numberOfLines; i++) {
-            int lineWidth = Global.getStringWidth(Global.getCursor().document.getLine(i).toString());
+            int lineWidth = Global.getStringWidth(Global.getCursor().getDocument().getLine(i).toString());
             if (lineWidth > documentWidth) {
                 documentWidth = lineWidth;
             }
@@ -90,7 +89,7 @@ public class CodeEditor extends JPanel implements Scrollable {
         g.setColor(Color.LIGHT_GRAY);
         g.fillRect(0, 0, LINE_NUM_WIDTH, getHeight());
         g.setColor(Color.BLACK);
-        for (int i = 0; i < Global.getCursor().document.numberOfLines(); i++) {
+        for (int i = 0; i < Global.getCursor().getDocument().getLineCount(); i++) {
             g.drawString(String.valueOf(i + 1), MARGIN_LEFT, MARGIN_TOP + (i + 1) * Global.getLineHeight());
         }
     }
@@ -99,9 +98,9 @@ public class CodeEditor extends JPanel implements Scrollable {
         int stringWidth = Global.getStringWidth(Global.getCursor().getTextBeforeCursor());
 
         g.drawLine(LINE_NUM_WIDTH + MARGIN_LEFT + stringWidth + CURSOR_OFFSET_X,
-                MARGIN_TOP + Global.getCursor().getCurrentLine() * Global.getLineHeight() + CURSOR_OFFSET_Y,
+                MARGIN_TOP + Global.getCursor().getLine() * Global.getLineHeight() + CURSOR_OFFSET_Y,
                 LINE_NUM_WIDTH + MARGIN_LEFT + stringWidth + CURSOR_OFFSET_X,
-                MARGIN_TOP + Global.getCursor().getCurrentLine() * Global.getLineHeight() + CURSOR_HEIGHT + CURSOR_OFFSET_Y);
+                MARGIN_TOP + Global.getCursor().getLine() * Global.getLineHeight() + CURSOR_HEIGHT + CURSOR_OFFSET_Y);
     }
 
     private void drawText(Graphics g) {
@@ -109,7 +108,7 @@ public class CodeEditor extends JPanel implements Scrollable {
         int pxRow = Global.getLineHeight();
         String textToRender;
         int stringWidth;
-        for (Document.Line line : Global.getCursor().document.getLines()) {
+        for (Line line : Global.getCursor().getDocument().getLines()) {
             for (Token token : line.getTokens()) {
                 if (token instanceof NewLineToken) {
                     // There shouldn't be a NewLineToken in the middle of a line,
@@ -126,7 +125,7 @@ public class CodeEditor extends JPanel implements Scrollable {
                 g.setColor(token.getBackgroundColor());
                 g.fillRect(LINE_NUM_WIDTH + MARGIN_LEFT + pxColumn, MARGIN_TOP + pxRow - Global.getLineHeight() + 2, stringWidth, Global.getLineHeight());
 
-                if (!token.isValid()) {
+                if (!token.getValid()) {
                     g.setColor(Color.RED);
                     g.drawLine(LINE_NUM_WIDTH + MARGIN_LEFT + pxColumn, MARGIN_TOP + pxRow, LINE_NUM_WIDTH + MARGIN_LEFT + pxColumn + stringWidth, MARGIN_TOP + pxRow);
                 }
@@ -141,34 +140,34 @@ public class CodeEditor extends JPanel implements Scrollable {
     }
 
     private void drawSelectionOverlay(Graphics g) {
-        EditorCursor.TextPosition selectionStart = Global.getCursor().getSelectionStart();
-        EditorCursor.TextPosition selectionEnd = Global.getCursor().getSelectionEnd();
+        TextPosition selectionStart = Global.getCursor().getSelectionStart();
+        TextPosition selectionEnd = Global.getCursor().getSelectionEnd();
 
         if (selectionStart == null || selectionEnd == null) {
             return;
         }
 
-        EditorCursor.TextPosition from = selectionStart.compareTo(selectionEnd) < 0 ? selectionStart : selectionEnd;
-        EditorCursor.TextPosition to = selectionStart.compareTo(selectionEnd) < 0 ? selectionEnd : selectionStart;
+        TextPosition from = selectionStart.compareTo(selectionEnd) < 0 ? selectionStart : selectionEnd;
+        TextPosition to = selectionStart.compareTo(selectionEnd) < 0 ? selectionEnd : selectionStart;
 
-        if (from.line == to.line) {
-            int stringWidth = Global.getStringWidth(Global.getCursor().document.getLine(from.line).substring(from.column, to.column));
+        if (from.getLine() == to.getLine()) {
+            int stringWidth = Global.getStringWidth(Global.getCursor().getDocument().getLine(from.getLine()).substring(from.getColumn(), to.getColumn()));
             g.setColor(EditorColors.SELECTION_COLOR);
-            g.fillRect(LINE_NUM_WIDTH + MARGIN_LEFT + Global.getStringWidth(Global.getCursor().document.getLine(from.line).substring(0, from.column)),
-                    MARGIN_TOP + from.line * Global.getLineHeight() + 2, stringWidth, Global.getLineHeight());
+            g.fillRect(LINE_NUM_WIDTH + MARGIN_LEFT + Global.getStringWidth(Global.getCursor().getDocument().getLine(from.getLine()).substring(0, from.getColumn())),
+                    MARGIN_TOP + from.getLine() * Global.getLineHeight() + 2, stringWidth, Global.getLineHeight());
         } else {
-            int stringWidth = Global.getStringWidth(Global.getCursor().document.getLine(from.line).substring(from.column, Global.getCursor().document.getLine(from.line).length()));
+            int stringWidth = Global.getStringWidth(Global.getCursor().getDocument().getLine(from.getLine()).substring(from.getColumn(), Global.getCursor().getDocument().getLine(from.getLine()).length()));
             g.setColor(EditorColors.SELECTION_COLOR);
-            g.fillRect(LINE_NUM_WIDTH + MARGIN_LEFT + Global.getStringWidth(Global.getCursor().document.getLine(from.line).substring(0, from.column)),
-                    MARGIN_TOP + from.line * Global.getLineHeight() + 2, stringWidth, Global.getLineHeight());
+            g.fillRect(LINE_NUM_WIDTH + MARGIN_LEFT + Global.getStringWidth(Global.getCursor().getDocument().getLine(from.getLine()).substring(0, from.getColumn())),
+                    MARGIN_TOP + from.getLine() * Global.getLineHeight() + 2, stringWidth, Global.getLineHeight());
 
-            for (int i = from.line + 1; i < to.line; i++) {
-                stringWidth = Global.getStringWidth(Global.getCursor().document.getLine(i).toString());
+            for (int i = from.getLine() + 1; i < to.getLine(); i++) {
+                stringWidth = Global.getStringWidth(Global.getCursor().getDocument().getLine(i).toString());
                 g.fillRect(LINE_NUM_WIDTH + MARGIN_LEFT, MARGIN_TOP + i * Global.getLineHeight() + 2, stringWidth, Global.getLineHeight());
             }
 
-            stringWidth = Global.getStringWidth(Global.getCursor().document.getLine(to.line).substring(0, to.column));
-            g.fillRect(LINE_NUM_WIDTH + MARGIN_LEFT, MARGIN_TOP + to.line * Global.getLineHeight() + 2, stringWidth, Global.getLineHeight());
+            stringWidth = Global.getStringWidth(Global.getCursor().getDocument().getLine(to.getLine()).substring(0, to.getColumn()));
+            g.fillRect(LINE_NUM_WIDTH + MARGIN_LEFT, MARGIN_TOP + to.getLine() * Global.getLineHeight() + 2, stringWidth, Global.getLineHeight());
         }
     }
 
@@ -295,7 +294,7 @@ public class CodeEditor extends JPanel implements Scrollable {
             if (line < 0) {
                 return 0;
             }
-            return Math.min(line, Global.getCursor().document.numberOfLines() - 1);
+            return Math.min(line, Global.getCursor().getDocument().getLineCount() - 1);
         }
 
         private int getColumn(int x, int line) {
@@ -303,7 +302,7 @@ public class CodeEditor extends JPanel implements Scrollable {
             if (column < 0) {
                 return 0;
             }
-            return Math.min(column, Global.getCursor().document.getLine(line).length());
+            return Math.min(column, Global.getCursor().getDocument().getLine(line).length());
         }
 
 
@@ -357,7 +356,7 @@ public class CodeEditor extends JPanel implements Scrollable {
             int lastLine = getLine(lastY);
             int lastColumn = getColumn(lastX, lastLine);
 
-            Global.getCursor().setSelection(new EditorCursor.TextPosition(firstColumn, firstLine), new EditorCursor.TextPosition(lastColumn, lastLine));
+            Global.getCursor().setSelection(new TextPosition(firstColumn, firstLine), new TextPosition(lastColumn, lastLine));
             Global.getCursor().moveTo(lastColumn, lastLine);
 
 

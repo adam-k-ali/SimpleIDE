@@ -6,7 +6,7 @@ public class BackspaceAction extends Action {
     @Override
     public void execute(Object... args) {
         // Don't allow backspace if we're on the first, empty line.
-        if (Global.getCursor().getCurrentColumn() == 0 && Global.getCursor().getCurrentLine() == 0) {
+        if (Global.getCursor().getColumn() == 0 && Global.getCursor().getLine() == 0) {
             return;
         }
 
@@ -15,15 +15,15 @@ public class BackspaceAction extends Action {
 
         if (textBeforeCursor.isEmpty()) {
             // Move textAfterCursor up one line, and delete the current line
-            Global.getCursor().document.removeLine(Global.getCursor().getCurrentLine());
+            Global.getCursor().getDocument().removeLine(Global.getCursor().getLine());
             Global.getCursor().moveUp();
-            int prevLineLength = Global.getCursor().document.getLine(Global.getCursor().getCurrentLine()).length();
-            Global.getCursor().document.getLine(Global.getCursor().getCurrentLine()).append(textAfterCursor);
+            int prevLineLength = Global.getCursor().getDocument().getLine(Global.getCursor().getLine()).length();
+            Global.getCursor().getDocument().getLine(Global.getCursor().getLine()).append(textAfterCursor);
             Global.getCursor().moveBy(prevLineLength, 0);
         } else {
             // Remove the last character from textBeforeCursor
             textBeforeCursor = textBeforeCursor.substring(0, textBeforeCursor.length() - 1);
-            Global.getCursor().document.getLine(Global.getCursor().getCurrentLine()).rewrite(textBeforeCursor + textAfterCursor);
+            Global.getCursor().getDocument().getLine(Global.getCursor().getLine()).rewrite(textBeforeCursor + textAfterCursor);
             Global.getCursor().moveLeft();
         }
     }
