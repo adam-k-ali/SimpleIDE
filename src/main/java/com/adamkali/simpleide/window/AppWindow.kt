@@ -25,7 +25,8 @@ object AppWindow {
 
         val container = JPanel()
         container.layout = BoxLayout(container, BoxLayout.Y_AXIS)
-        container.add(editorPanel, statusPanel)
+        container.add(editorPanel)
+        container.add(statusPanel)
 
         frame.add(container)
 
