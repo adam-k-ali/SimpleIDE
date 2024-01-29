@@ -1,4 +1,4 @@
-package com.adamkali.simpleide
+package com.adamkali.simpleide.window
 
 import javax.swing.BoxLayout
 import javax.swing.JFrame

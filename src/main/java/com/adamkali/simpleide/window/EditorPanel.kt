@@ -1,4 +1,4 @@
-package com.adamkali.simpleide
+package com.adamkali.simpleide.window
 
 import com.adamkali.simpleide.browser.ProjectBrowser
 import com.adamkali.simpleide.editor.CodeEditor
