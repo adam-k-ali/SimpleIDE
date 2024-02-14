@@ -129,6 +129,10 @@ class EditorCursor(
         }
     }
 
+    fun moveTo(position: TextPosition) {
+        val prevPosition = TextPosition(line, column)
+    }
+
     fun moveBy(line: Int, column: Int) {
         moveTo(this.line + line, this.column + column)
     }

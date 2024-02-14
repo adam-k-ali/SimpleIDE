@@ -14,6 +14,13 @@ class TextPosition(val line: Int, val column: Int) : Comparable<TextPosition> {
         return 0
     }
 
+    fun clip(maxLine: Int, maxColumn: Int): TextPosition {
+        return TextPosition(
+            line.coerceIn(0, maxLine),
+            column.coerceIn(0, maxColumn)
+        )
+    }
+
     override fun toString(): String {
         return "TextPosition(line=$line, column=$column)"
     }

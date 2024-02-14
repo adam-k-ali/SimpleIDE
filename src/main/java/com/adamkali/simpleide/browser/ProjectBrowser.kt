@@ -1,9 +1,14 @@
 package com.adamkali.simpleide.browser
 
 import com.adamkali.simpleide.Global
+import com.adamkali.simpleide.activity.ProjectActivityListener
+import com.adamkali.simpleide.browser.components.FolderButton
+import com.adamkali.simpleide.project.Project
 import com.adamkali.simpleide.project.ProjectManager
 import java.awt.Color
 import java.awt.Graphics
+import java.awt.event.MouseEvent
+import java.awt.event.MouseListener
 import java.io.FileNotFoundException
 import java.nio.file.Paths
 import javax.swing.BoxLayout
@@ -13,12 +18,18 @@ import javax.swing.JPanel
 /**
  * The ProjectBrowser class is a JPanel that displays the project structure.
  */
-class ProjectBrowser : JPanel() {
+class ProjectBrowser : JPanel(), ProjectActivityListener, MouseListener {
     init {
+        addMouseListener(this)
+
         font = Global.getFont()
 
         layout = BoxLayout(this, BoxLayout.Y_AXIS)
         add(JLabel("Project Browser"))
+
+//        add(JLabel("Source Folders"))
+
+        ProjectManager.registerCallback(this)
 
         // Load a default project (for now)
         try {
@@ -26,6 +37,11 @@ class ProjectBrowser : JPanel() {
         } catch (e: FileNotFoundException) {
             throw RuntimeException(e)
         }
+
+//        var button = FolderButton(ProjectManager.activeProject!!.sourceFolders[0])
+////        button.setSize(100, 20)
+//        button.setBounds(10, 10, 100, 20)
+//        add(button)
     }
 
     /**
@@ -45,35 +61,55 @@ class ProjectBrowser : JPanel() {
         g.color = Color.GRAY
         g.drawRect(0, 0, width - 1, height - 1)
 
-        if (ProjectManager.activeProject != null) {
-            // Draw project name
-            g.color = Color.BLACK
-            g.drawString(ProjectManager.activeProject!!.getProjectName(), 10, 20)
-            
-            // Draw Source Folders
-            var y = 40;
-            for (sourceFolder in ProjectManager.activeProject!!.sourceFolders) {
+    }
 
-                g.drawString(sourceFolder.getName(), 20, y)
-                y += 20
 
-                for (sourcePackage in sourceFolder.sourcePackages) {
-                    g.drawString(sourcePackage.getName(), 30, y)
-                    y += 20
+    private fun clearFolderButtons() {
+        for (i in 0 until componentCount) {
+            val component = getComponent(i)
+            if (component is FolderButton) {
+                remove(component)
+            }
+        }
+    }
 
-                    for (sourceFile in sourcePackage.sourceFiles) {
-                        g.drawString(sourceFile.getFileName(), 40, y)
-                        y += 20
-                    }
+    override fun onProjectLoad(project: Project) {
+        clearFolderButtons()
+        for (sourceFolder in project.sourceFolders) {
+            val folderButton = FolderButton(sourceFolder)
+            add(folderButton)
+        }
 
-                }
+        repaint()
+    }
 
-                for (sourceFile in sourceFolder.sourceFiles) {
-                    g.drawString(sourceFile.getFileName(), 30, y)
-                    y += 20
+    override fun mouseClicked(e: MouseEvent?) {
+        if (e == null) return
+
+        for (i in 0 until componentCount) {
+            val component = getComponent(i)
+            if (component is FolderButton) {
+                if (component.contains(e.point)) {
+                    println("Clicked on folder button for ${component.getText()}")
+                    println("Button bounds: ${component.bounds}")
+                } else {
+                    // Print the button's bounds
+                    println("Button bounds: ${component.bounds}")
                 }
             }
         }
+    }
 
+    override fun mousePressed(e: MouseEvent?) {
+    }
+
+    override fun mouseReleased(e: MouseEvent?) {
+    }
+
+    override fun mouseEntered(e: MouseEvent?) {
+        if (e == null) return
+    }
+
+    override fun mouseExited(e: MouseEvent?) {
     }
 }

@@ -1,5 +1,6 @@
 package com.adamkali.simpleide.project
 
+import com.adamkali.simpleide.activity.ProjectActivityListener
 import com.adamkali.simpleide.window.AppWindow
 import com.google.gson.Gson
 import com.google.gson.stream.JsonReader
@@ -22,6 +23,20 @@ object ProjectManager {
     /** The GSON instance used to serialize and deserialize projects */
     private var gson = Gson()
 
+    /** The callbacks for project activity */
+    private var callbacks = mutableListOf<ProjectActivityListener>();
+
+    fun registerCallback(listener: ProjectActivityListener) {
+        if (!callbacks.contains(listener)) {
+            callbacks.add(listener);
+        }
+    }
+
+    fun deregisterCallback(listener: ProjectActivityListener) {
+        if (callbacks.contains(listener)) {
+            callbacks.remove(listener);
+        }
+    }
 
     /**
      * Loads a package from the given path
@@ -69,6 +84,8 @@ object ProjectManager {
         }
 
         activeProject = project
-
+        for (callback in callbacks) {
+            callback.onProjectLoad(project)
+        }
     }
 }
