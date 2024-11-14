@@ -1,237 +1,199 @@
-package com.adamkali.simpleide.editor.io;
+package com.adamkali.simpleide.editor.io
 
-import com.adamkali.simpleide.App;
+import com.adamkali.simpleide.activity.CursorActivityListener
 
-/**
- * The cursor is responsible for moving around the document.
- * Cursor keeps track of three things:
- * 1. The current column
- * 2. The current line
- * 3. The document
- */
-public class EditorCursor {
-    private int currentColumn;
-    private int currentLine;
-
-    public Document document;
-
-    private TextPosition selectionStart;
-    private TextPosition selectionEnd;
+class EditorCursor(
+    private var document: Document,
+    private var column: Int = 0,
+    private var line: Int = 0
+) {
 
 
-    public EditorCursor(Document document) {
-        this(document, 0, 0);
+    private var selectionStart: TextPosition? = null
+    private var selectionEnd: TextPosition? = null
+    private var callback: CursorActivityListener? = null
+
+    fun setActionListener(cursorListener: CursorActivityListener) {
+        this.callback = cursorListener
     }
 
-    public EditorCursor(Document document, int column, int currentLine) {
-        this.document = new Document();
-        this.currentColumn = column;
-        this.currentLine = currentLine;
-    }
-
-    /**
-     * Moves the cursor up one line.
-     * If the cursor is already on the first line, it will not move.
-     * If the cursor is past the end of the new line, it will move to the end of the line.
-     */
-    public void moveUp() {
-        if (currentLine > 0) {
-            // Move up a line
-            currentLine--;
-
-            // Move to the end of the line if the current column is past the end of the line
-            if (currentColumn > document.getLine(currentLine).length()) {
-                moveToEndOfLine();
-            }
+    fun moveUp() {
+        val prevPosition = TextPosition(line, column)
+        if (line > 0) {
+            line--
+            column = Math.min(column, document.getLine(line).length())
         }
+        val newPosition = TextPosition(line, column)
 
-        App.statusBar.repaint();
-    }
-
-    /**
-     * Moves the cursor down one line.
-     * If the cursor is already on the last line, it will not move.
-     * If the cursor is past the end of the new line, it will move to the end of the line.
-     */
-    public void moveDown() {
-        if (currentLine < document.numberOfLines() - 1) {
-            // Move down a line
-            currentLine++;
-
-            // Move to the end of the line if the current column is past the end of the line
-            if (currentColumn > document.getLine(currentLine).length()) {
-                moveToEndOfLine();
-            }
+        if (callback != null && prevPosition != newPosition) {
+            callback!!.onCursorMove(prevPosition, newPosition)
         }
-
-        App.statusBar.repaint();
     }
 
-    /**
-     * Moves the cursor left one column,
-     * or to the end of the previous line if the cursor is on the first column of the current line.
-     */
-    public void moveLeft() {
-        if (currentColumn > 0) {
-            currentColumn--;
-        } else {
-            if (currentLine == 0) {
-                return;
-            }
-
-            moveUp();
-            moveToEndOfLine();
+    fun moveDown() {
+        val prevPosition = TextPosition(line, column)
+        if (line < document.getLineCount() - 1) {
+            line++
+            column = Math.min(column, document.getLine(line).length())
         }
+        val newPosition = TextPosition(line, column)
 
-        App.statusBar.repaint();
-    }
-
-    /**
-     * Moves the cursor right one column,
-     * or to the start of the next line if the cursor is on the last column of the current line.
-     */
-    public void moveRight() {
-        if (currentColumn < document.getLine(currentLine).length()) {
-            currentColumn++;
-        } else {
-            if (currentLine == document.numberOfLines() - 1) {
-                return;
-            }
-            moveDown();
-            moveToStartOfLine();
+        if (callback != null && prevPosition != newPosition) {
+            callback!!.onCursorMove(prevPosition, newPosition)
         }
-
-        App.statusBar.repaint();
     }
 
-    public void moveToStartOfLine() {
-        currentColumn = 0;
-
-        App.statusBar.repaint();
-    }
-
-    public void moveToEndOfLine() {
-        currentColumn = document.getLine(currentLine).length();
-
-        App.statusBar.repaint();
-    }
-
-    public void moveTo(int column, int row) {
-        if (column < 0 || row < 0) {
-            throw new IllegalArgumentException("Column and row must be positive");
+    fun moveLeft() {
+        val prevPosition = TextPosition(line, column)
+        if (column > 0) {
+            column--
+        } else if (line > 0) {
+            line--
+            column = document.getLine(line).length()
         }
+        val newPosition = TextPosition(line, column)
 
-        this.currentColumn = column;
-        this.currentLine = row;
-
-        App.statusBar.repaint();
-    }
-
-    public void moveBy(int column, int row) {
-        if (column < 0 || row < 0) {
-            throw new IllegalArgumentException("Column and row must be positive");
+        if (callback != null && prevPosition != newPosition) {
+            callback!!.onCursorMove(prevPosition, newPosition)
         }
-        this.currentColumn += column;
-        this.currentLine += row;
-
-        App.statusBar.repaint();
     }
 
-    public int getCurrentColumn() {
-        return currentColumn;
+    fun moveRight() {
+        val prevPosition = TextPosition(line, column)
+        if (column < document.getLine(line).length()) {
+            column++
+        } else if (line < document.getLineCount() - 1) {
+            line++
+            column = 0
+        }
+        val newPosition = TextPosition(line, column)
+
+        if (callback != null && prevPosition != newPosition) {
+            callback!!.onCursorMove(prevPosition, newPosition)
+        }
     }
 
-    public int getCurrentLine() {
-        return currentLine;
+    fun moveToStartOfLine() {
+        val prevPosition = TextPosition(line, column)
+        column = 0
+        val newPosition = TextPosition(line, column)
+
+        if (callback != null && prevPosition != newPosition) {
+            callback!!.onCursorMove(prevPosition, newPosition)
+        }
     }
 
-    public String getTextBeforeCursor() {
-        return document.getLine(currentLine).substring(0, currentColumn);
+    fun moveToEndOfLine() {
+        val prevPosition = TextPosition(line, column)
+        column = document.getLine(line).length()
+        val newPosition = TextPosition(line, column)
+
+        if (callback != null && prevPosition != newPosition) {
+            callback!!.onCursorMove(prevPosition, newPosition)
+        }
     }
 
-    public String getTextAfterCursor() {
-        return document.getLine(currentLine).substring(currentColumn, document.getLine(currentLine).length());
+    fun moveToStartOfDocument() {
+        val prevPosition = TextPosition(line, column)
+        line = 0
+        column = 0
+        val newPosition = TextPosition(line, column)
+
+        if (callback != null && prevPosition != newPosition) {
+            callback!!.onCursorMove(prevPosition, newPosition)
+        }
     }
 
-    public void setSelection(TextPosition start, TextPosition end) {
-        this.selectionStart = start;
-        this.selectionEnd = end;
+    fun moveToEndOfDocument() {
+        val prevPosition = TextPosition(line, column)
+        line = document.getLineCount() - 1
+        column = document.getLine(line).length()
+
+        val newPosition = TextPosition(line, column)
+
+        if (callback != null && prevPosition != newPosition) {
+            callback!!.onCursorMove(prevPosition, newPosition)
+        }
     }
 
-    public void clearSelection() {
-        this.selectionStart = null;
-        this.selectionEnd = null;
+    fun moveTo(line: Int, column: Int) {
+        val prevPosition = TextPosition(this.line, this.column)
+
+        this.line = Math.max(0, Math.min(line, document.getLineCount() - 1))
+        this.column = Math.max(0, Math.min(column, document.getLine(this.line).length()))
+
+        val newPosition = TextPosition(this.line, this.column)
+
+        if (callback != null && prevPosition != newPosition) {
+            callback!!.onCursorMove(prevPosition, newPosition)
+        }
     }
 
-    public String getSelectedText() {
+    fun moveTo(position: TextPosition) {
+        val prevPosition = TextPosition(line, column)
+    }
+
+    fun moveBy(line: Int, column: Int) {
+        moveTo(this.line + line, this.column + column)
+    }
+
+    fun getLine(): Int {
+        return line
+    }
+
+    fun getColumn(): Int {
+        return column
+    }
+
+    fun getDocument(): Document {
+        return document
+    }
+
+    fun getTextBeforeCursor(): String {
+        return document.getLine(line).substring(0, column)
+    }
+
+    fun getTextAfterCursor(): String {
+        return document.getLine(line).substring(column, document.getLine(line).length())
+    }
+
+    fun setSelection(start: TextPosition, end: TextPosition) {
+        this.selectionStart = start
+        this.selectionEnd = end
+    }
+
+    fun clearSelection() {
+        this.selectionStart = null
+        this.selectionEnd = null
+    }
+
+    fun getSelectedText(): String? {
         if (selectionStart == null || selectionEnd == null) {
             return null;
         }
-        if (selectionStart.line == selectionEnd.line) {
-            return document.getLine(selectionStart.line).substring(selectionStart.column, selectionEnd.column);
+
+        if (selectionStart!!.line == selectionEnd!!.line) {
+            return document.getLine(selectionStart!!.line).substring(selectionStart!!.column, selectionEnd!!.column)
         } else {
-            TextPosition from = selectionStart.compareTo(selectionEnd) < 0 ? selectionStart : selectionEnd;
-            TextPosition to = selectionStart.compareTo(selectionEnd) < 0 ? selectionEnd : selectionStart;
+            val from: TextPosition = if (selectionStart!! < selectionEnd!!) selectionStart!! else selectionEnd!!
+            val to: TextPosition = if (selectionStart!! < selectionEnd!!) selectionEnd!! else selectionStart!!
 
-            String text = document.getLine(from.line).substring(from.column, document.getLine(from.line).length());
-            for (int i = from.line + 1; i < to.line; i++) {
-                text += document.getLine(i);
-                text += "\n";
+            var text = document.getLine(from.line).substring(from.column, document.getLine(from.line).length())
+            for (i in from.line + 1 until to.line) {
+                text += document.getLine(i)
+                text += "\n"
             }
-            text += document.getLine(to.line).substring(0, to.column);
-            return text;
+            text += document.getLine(to.line).substring(0, to.column)
+            return text
         }
     }
 
-    public TextPosition getSelectionStart() {
-        return selectionStart;
+    fun getSelectionStart(): TextPosition? {
+        return selectionStart
     }
 
-    public TextPosition getSelectionEnd() {
-        return selectionEnd;
-    }
-
-    public static class TextPosition implements Comparable<TextPosition> {
-        public int column;
-        public int line;
-
-        public TextPosition(int column, int line) {
-            this.column = column;
-            this.line = line;
-        }
-
-        public boolean equals(Object o) {
-            if (o == this) {
-                return true;
-            }
-            if (!(o instanceof TextPosition)) {
-                return false;
-            }
-            TextPosition other = (TextPosition) o;
-            return this.column == other.column && this.line == other.line;
-        }
-
-        @Override
-        public String toString() {
-            return "TextPosition{" +
-                    "column=" + column +
-                    ", line=" + line +
-                    '}';
-        }
-
-        @Override
-        public int compareTo(TextPosition o) {
-            if (this.line < o.line) {
-                return -1;
-            } else if (this.line > o.line) {
-                return 1;
-            } else if (this.column < o.column) {
-                return -1;
-            } else if (this.column > o.column) {
-                return 1;
-            }
-            return 0;
-        }
+    fun getSelectionEnd(): TextPosition? {
+        return selectionEnd
     }
 
 }

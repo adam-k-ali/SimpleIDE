@@ -1,8 +1,8 @@
 package com.adamkali.simpleide;
 
-import com.adamkali.simpleide.editor.io.EditorCursor;
 import com.adamkali.simpleide.editor.io.Document;
 import com.adamkali.simpleide.preferences.ThemeData;
+import com.adamkali.simpleide.editor.io.EditorCursor;
 
 import java.awt.*;
 
@@ -13,7 +13,7 @@ public class Global {
     private static Font font = new Font("Monospaced", Font.PLAIN, 12);
     private static ThemeData theme;
 
-    private static EditorCursor editorCursor = new EditorCursor(new Document());
+    private static EditorCursor editorCursor = new EditorCursor(new Document(), 0, 0);
 
     public static int getMarginTop() {
         return margin_top;

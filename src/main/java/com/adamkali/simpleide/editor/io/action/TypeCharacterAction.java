@@ -15,7 +15,7 @@ public class TypeCharacterAction extends Action {
         String textBeforeCursor = Global.getCursor().getTextBeforeCursor();
         String textAfterCursor = Global.getCursor().getTextAfterCursor();
 
-        Global.getCursor().document.getLine(Global.getCursor().getCurrentLine()).rewrite(textBeforeCursor + args[0] + textAfterCursor);
+        Global.getCursor().getDocument().getLine(Global.getCursor().getLine()).rewrite(textBeforeCursor + args[0] + textAfterCursor);
         Global.getCursor().moveRight();
     }
 }

@@ -8,21 +8,21 @@ import com.adamkali.simpleide.Global;
 public class NewLineAction extends Action {
     @Override
     public void execute(Object... args) {
-        String textBeforeCursor = Global.getCursor().document.getLine(Global.getCursor().getCurrentLine()).substring(0, Global.getCursor().getCurrentColumn());
-        String textAfterCursor = Global.getCursor().document.getLine(Global.getCursor().getCurrentLine()).substring(Global.getCursor().getCurrentColumn(), Global.getCursor().document.getLine(Global.getCursor().getCurrentLine()).length());
+        String textBeforeCursor = Global.getCursor().getDocument().getLine(Global.getCursor().getLine()).substring(0, Global.getCursor().getColumn());
+        String textAfterCursor = Global.getCursor().getDocument().getLine(Global.getCursor().getLine()).substring(Global.getCursor().getColumn(), Global.getCursor().getDocument().getLine(Global.getCursor().getLine()).length());
 
-        Global.getCursor().document.newLine(Global.getCursor().getCurrentLine());
+        Global.getCursor().getDocument().newLine(Global.getCursor().getLine());
         if (!textAfterCursor.isEmpty()) {
-            Global.getCursor().document.getLine(Global.getCursor().getCurrentLine() + 1).append(textAfterCursor);
-            Global.getCursor().document.getLine(Global.getCursor().getCurrentLine()).rewrite(textBeforeCursor);
+            Global.getCursor().getDocument().getLine(Global.getCursor().getLine() + 1).append(textAfterCursor);
+            Global.getCursor().getDocument().getLine(Global.getCursor().getLine()).rewrite(textBeforeCursor);
         }
         Global.getCursor().moveDown();
         Global.getCursor().moveToStartOfLine();
 
         // Make the new line have the same indentation as the previous line
-        int indent = Global.getCursor().document.getLine(Global.getCursor().getCurrentLine() - 1).indentations();
+        int indent = Global.getCursor().getDocument().getLine(Global.getCursor().getLine() - 1).indentations();
         for (int i = 0; i < indent; i++) {
-            Global.getCursor().document.getLine(Global.getCursor().getCurrentLine()).append(" ");
+            Global.getCursor().getDocument().getLine(Global.getCursor().getLine()).append(" ");
             Global.getCursor().moveRight();
         }
     }

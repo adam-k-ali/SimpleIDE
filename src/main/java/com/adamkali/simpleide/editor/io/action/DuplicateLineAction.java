@@ -1,8 +1,7 @@
 package com.adamkali.simpleide.editor.io.action;
 
 import com.adamkali.simpleide.Global;
-import com.adamkali.simpleide.editor.io.Document;
-import com.adamkali.simpleide.editor.io.EditorCursor;
+import com.adamkali.simpleide.editor.io.Line;
 
 public class DuplicateLineAction extends Action {
     @Override
@@ -11,9 +10,9 @@ public class DuplicateLineAction extends Action {
             return;
         }
 
-        String lineText = Global.getCursor().document.getLine(Global.getCursor().getCurrentLine()).toString();
-        Document.Line line = new Document.Line();
+        String lineText = Global.getCursor().getDocument().getLine(Global.getCursor().getLine()).toString();
+        Line line = new Line();
         line.rewrite(lineText);
-        Global.getCursor().document.insertLine(Global.getCursor().getCurrentLine() + 1, line);
+        Global.getCursor().getDocument().insertLine(Global.getCursor().getLine() + 1, line);
     }
 }
