@@ -9,13 +9,13 @@ class ThemeLoaderTests {
         val colorPropertyString: String = "{\n" +
                 "  \"current_line_highlight\": {\n" +
                 "    \"color\": {\n" +
-                "      \"background\": [\n" +
+                "      \"foreground\": [\n" +
                 "        30,\n" +
                 "        30,\n" +
                 "        30,\n" +
                 "        255\n" +
                 "      ],\n" +
-                "      \"foreground\": [\n" +
+                "      \"background\": [\n" +
                 "        200,\n" +
                 "        200,\n" +
                 "        200,\n" +
@@ -26,7 +26,14 @@ class ThemeLoaderTests {
                 "}"
 
         val colorMap =
-            mapOf("current_line_height" to ColorProperty(intArrayOf(30, 30, 30, 255), intArrayOf(200, 200, 200, 255)))
+            mapOf(
+                "current_line_highlight" to ThemeProperty(
+                    ColorProperty(
+                        foreground = intArrayOf(30, 30, 30, 255),
+                        background = intArrayOf(200, 200, 200, 255)
+                    )
+                )
+            )
         val expectedTheme = Theme(colorMap)
 
         val loadedTheme = ThemeLoader.loads(colorPropertyString)
