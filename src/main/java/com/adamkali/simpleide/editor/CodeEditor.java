@@ -321,7 +321,7 @@ public class CodeEditor extends JPanel implements Scrollable {
             int y = e.getY();
             int line = getLine(y);
             int column = getColumn(x, line);
-            Global.getCursor().moveTo(column, line);
+            Global.getCursor().moveTo(line, column);
             update();
             repaint();
         }
@@ -364,7 +364,7 @@ public class CodeEditor extends JPanel implements Scrollable {
             int lastColumn = getColumn(lastX, lastLine);
 
             Global.getCursor().setSelection(new TextPosition(firstColumn, firstLine), new TextPosition(lastColumn, lastLine));
-            Global.getCursor().moveTo(lastColumn, lastLine);
+            Global.getCursor().moveTo(lastLine, lastColumn);
 
 
             update();
