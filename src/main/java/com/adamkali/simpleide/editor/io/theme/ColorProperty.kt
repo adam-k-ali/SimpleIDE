@@ -10,4 +10,8 @@ data class ColorProperty(
                 "background=[" + background[0] + ", " + background[1] + ", " + background[2] + ", " + background[3] + "]" +
                 "}");
     }
+
+    override fun equals(other: Any?): Boolean {
+        return other is ColorProperty && foreground.contentEquals(other.foreground) && background.contentEquals(other.background)
+    }
 }
