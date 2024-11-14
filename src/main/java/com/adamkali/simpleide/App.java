@@ -2,6 +2,9 @@ package com.adamkali.simpleide;
 
 import com.adamkali.simpleide.editor.CodeEditor;
 import com.adamkali.simpleide.editor.StatusBar;
+import com.adamkali.simpleide.editor.io.theme.Theme;
+import com.adamkali.simpleide.editor.io.theme.ThemeLoader;
+import com.adamkali.simpleide.preferences.ThemeData;
 
 import javax.swing.*;
 import java.awt.*;
@@ -26,6 +29,9 @@ public class App {
         mainWindow.setLocationRelativeTo(null);
 
         statusBar = new StatusBar();
+
+        Theme theme = ThemeLoader.INSTANCE.load("src/main/resources/preferences/editor-theme.json");
+        Global.setTheme(new ThemeData(theme));
 
         run();
     }
@@ -86,9 +92,9 @@ public class App {
         thread.start();
     }
 
-
     /**
      * Main method
+     *
      * @param args
      */
     public static void main(String[] args) {

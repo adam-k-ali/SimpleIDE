@@ -2,6 +2,7 @@ package com.adamkali.simpleide;
 
 import com.adamkali.simpleide.editor.io.EditorCursor;
 import com.adamkali.simpleide.editor.io.Document;
+import com.adamkali.simpleide.preferences.ThemeData;
 
 import java.awt.*;
 
@@ -10,6 +11,7 @@ public class Global {
     private static int margin_left = 10;
     private static int line_num_width = 32;
     private static Font font = new Font("Monospaced", Font.PLAIN, 12);
+    private static ThemeData theme;
 
     private static EditorCursor editorCursor = new EditorCursor(new Document());
 
@@ -45,4 +47,11 @@ public class Global {
         return Toolkit.getDefaultToolkit().getFontMetrics(font).stringWidth(string);
     }
 
+    public static void setTheme(ThemeData theme) {
+        Global.theme = theme;
+    }
+
+    public static ThemeData getTheme() {
+        return theme;
+    }
 }
