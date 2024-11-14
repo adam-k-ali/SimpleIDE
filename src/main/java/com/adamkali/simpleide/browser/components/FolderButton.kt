@@ -48,10 +48,10 @@ class FolderButton(private val folder: SourcePackage) : JComponent(), SwingConst
         val lineHeight = g.fontMetrics.height
 
         // Draw a dropdown arrow
-        drawArrow(g, Direction.UP, 5, lineHeight, 4, 4)
+        drawArrow(g, Direction.UP, 5, height / 2 - 2, 4, 4)
 
         // Draw the folder name
-        g.drawString(folder.getName(), 16, lineHeight)
+        g.drawString(folder.getName(), 16, lineHeight / 2 + 3)
 
         // Draw red border to debug
         g.color = Color.RED;
