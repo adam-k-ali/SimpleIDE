@@ -305,10 +305,11 @@ public class CodeEditor extends JPanel implements Scrollable {
         }
 
         private int getColumn(int x, int line) {
-            int column = (x - LINE_NUM_WIDTH - MARGIN_LEFT) / CHARACTER_WIDTH;
-            if (column < 0) {
+            int xp = x - LINE_NUM_WIDTH - MARGIN_LEFT;
+            if (xp < CHARACTER_WIDTH) {
                 return 0;
             }
+            int column = xp / CHARACTER_WIDTH + 1;
             return Math.min(column, Global.getCursor().getDocument().getLine(line).length());
         }
 
