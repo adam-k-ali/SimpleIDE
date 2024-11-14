@@ -4,7 +4,6 @@ import java.awt.*;
 
 public class EditorColors {
     public static final Color SELECTION_COLOR = new Color(0, 0, 255, 50);
-    public static final Color CURRENT_LINE_COLOR = new Color(0, 0, 0, 25);
 
     public static final Color PLAINTEXT_FG_COLOR = Color.BLACK;
     public static final Color PLAINTEXT_BG_COLOR = Color.WHITE;
