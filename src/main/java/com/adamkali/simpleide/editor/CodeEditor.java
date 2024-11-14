@@ -305,10 +305,11 @@ public class CodeEditor extends JPanel implements Scrollable {
         }
 
         private int getColumn(int x, int line) {
-            int column = (x - LINE_NUM_WIDTH - MARGIN_LEFT) / CHARACTER_WIDTH;
-            if (column < 0) {
+            int xp = x - LINE_NUM_WIDTH - MARGIN_LEFT;
+            if (xp < CHARACTER_WIDTH) {
                 return 0;
             }
+            int column = xp / CHARACTER_WIDTH + 1;
             return Math.min(column, Global.getCursor().getDocument().getLine(line).length());
         }
 
@@ -321,7 +322,7 @@ public class CodeEditor extends JPanel implements Scrollable {
             int y = e.getY();
             int line = getLine(y);
             int column = getColumn(x, line);
-            Global.getCursor().moveTo(column, line);
+            Global.getCursor().moveTo(line, column);
             update();
             repaint();
         }
@@ -364,7 +365,7 @@ public class CodeEditor extends JPanel implements Scrollable {
             int lastColumn = getColumn(lastX, lastLine);
 
             Global.getCursor().setSelection(new TextPosition(firstColumn, firstLine), new TextPosition(lastColumn, lastLine));
-            Global.getCursor().moveTo(lastColumn, lastLine);
+            Global.getCursor().moveTo(lastLine, lastColumn);
 
 
             update();
