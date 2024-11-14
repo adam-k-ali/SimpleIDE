@@ -196,5 +196,4 @@ class EditorCursor(
         return selectionEnd
     }
 
-
 }

@@ -1,5 +1,8 @@
 package com.adamkali.simpleide.window
 
+import com.adamkali.simpleide.Global
+import com.adamkali.simpleide.editor.io.theme.ThemeLoader
+import com.adamkali.simpleide.preferences.ThemeData
 import javax.swing.BoxLayout
 import javax.swing.JFrame
 import javax.swing.JPanel
@@ -17,7 +20,14 @@ object AppWindow {
 
     }
 
+    fun loadTheme() {
+        val theme = ThemeLoader.load("src/main/resources/preferences/editor-theme.json")
+        Global.setTheme(ThemeData(theme))
+    }
+
     fun run() {
+        loadTheme()
+        
         frame.setSize(800, 600)
         frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
         frame.setLocationRelativeTo(null)

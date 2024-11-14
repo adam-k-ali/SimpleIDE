@@ -1,0 +1,18 @@
+{
+  "current_line_highlight": {
+    "color": {
+      "background": [
+        30,
+        30,
+        30,
+        255
+      ],
+      "foreground": [
+        0,
+        0,
+        0,
+        20
+      ]
+    }
+  }
+}
