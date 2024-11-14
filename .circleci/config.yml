@@ -1,0 +1,18 @@
+version: 2.1
+
+jobs:
+  run_tests:
+    docker:
+      - image:
+          maven:3.9
+    working_directory: ~/project
+    steps:
+      - checkout
+      - run:
+          name: Run tests
+          command: mvn test
+
+workflows:
+  build_and_test:
+    jobs:
+      - run_tests
