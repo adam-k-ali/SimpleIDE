@@ -141,7 +141,7 @@ public class CodeEditor extends JPanel implements Scrollable {
     }
 
     private void highlightCurrentLine(Graphics g) {
-        g.setColor(EditorColors.CURRENT_LINE_COLOR);
+        g.setColor(Global.getTheme().getCurrentLineColor().getColor().foregroundColor());
         g.fillRect(0, MARGIN_TOP + Global.getCursor().getCurrentLine() * Global.getLineHeight() + 2, getWidth(), Global.getLineHeight());
     }
 
