@@ -39,4 +39,10 @@ class ThemeLoaderTests {
         val loadedTheme = ThemeLoader.loads(colorPropertyString)
         Assertions.assertEquals(expectedTheme, loadedTheme)
     }
+
+    @org.junit.jupiter.api.Test
+    fun load_no_throw() {
+        val path = "src/main/resources/preferences/editor-theme.json"
+        Assertions.assertDoesNotThrow({ ThemeLoader.load(path) })
+    }
 }
