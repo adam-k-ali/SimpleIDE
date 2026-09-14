@@ -19,7 +19,7 @@ public class BackspaceAction extends Action {
             Global.getCursor().moveUp();
             int prevLineLength = Global.getCursor().getDocument().getLine(Global.getCursor().getLine()).length();
             Global.getCursor().getDocument().getLine(Global.getCursor().getLine()).append(textAfterCursor);
-            Global.getCursor().moveBy(prevLineLength, 0);
+            Global.getCursor().moveBy(0, prevLineLength);
         } else {
             // Remove the last character from textBeforeCursor
             textBeforeCursor = textBeforeCursor.substring(0, textBeforeCursor.length() - 1);

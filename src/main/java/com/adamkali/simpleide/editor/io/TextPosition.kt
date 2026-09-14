@@ -1,6 +1,6 @@
 package com.adamkali.simpleide.editor.io
 
-class TextPosition(val line: Int, val column: Int) : Comparable<TextPosition> {
+data class TextPosition(val line: Int, val column: Int) : Comparable<TextPosition> {
     override fun compareTo(other: TextPosition): Int {
         if (this.line < other.line) {
             return -1
@@ -24,5 +24,4 @@ class TextPosition(val line: Int, val column: Int) : Comparable<TextPosition> {
     override fun toString(): String {
         return "TextPosition(line=$line, column=$column)"
     }
-
 }

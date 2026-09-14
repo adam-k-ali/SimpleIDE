@@ -3,21 +3,24 @@ package com.adamkali.simpleide.window
 import com.adamkali.simpleide.Global
 import com.adamkali.simpleide.editor.io.theme.ThemeLoader
 import com.adamkali.simpleide.preferences.ThemeData
+import java.awt.Component
+import java.awt.Dimension
 import javax.swing.BoxLayout
 import javax.swing.JFrame
 import javax.swing.JPanel
+import javax.swing.Timer
 import javax.swing.UIManager
 
 object AppWindow {
-    private val frame: JFrame = JFrame("SimpleIDE")
-    private val editorPanel: EditorPanel = EditorPanel()
-    private val statusPanel: StatusPanel = StatusPanel()
+    private lateinit var frame: JFrame
+    private lateinit var editorPanel: EditorPanel
+    private lateinit var statusPanel: StatusPanel
+    private var editorTimer: Timer? = null
 
     fun setTitle(title: String) {
-        frame.title = "SimpleIDE - $title"
-
-        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-
+        if (this::frame.isInitialized) {
+            frame.title = "SimpleIDE - $title"
+        }
     }
 
     fun loadTheme() {
@@ -26,31 +29,32 @@ object AppWindow {
     }
 
     fun run() {
+        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
         loadTheme()
-        
-        frame.setSize(800, 600)
+
+        frame = JFrame("SimpleIDE")
+        editorPanel = EditorPanel()
+        statusPanel = StatusPanel()
+
         frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
+        frame.setSize(800, 600)
         frame.setLocationRelativeTo(null)
-        frame.isVisible = true
 
         val container = JPanel()
         container.layout = BoxLayout(container, BoxLayout.Y_AXIS)
+        editorPanel.alignmentX = Component.LEFT_ALIGNMENT
+        statusPanel.alignmentX = Component.LEFT_ALIGNMENT
+        editorPanel.maximumSize = Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE)
         container.add(editorPanel)
         container.add(statusPanel)
 
         frame.add(container)
-
         frame.isVisible = true
+        editorPanel.codeEditor.requestFocusInWindow()
 
-        editorPanel.codeEditor.requestFocus()
-
-        val thread: Thread = Thread {
-            while (true) {
-                editorPanel.codeEditor.update()
-                Thread.sleep(1000 / 60)
-            }
+        editorTimer = Timer(1000 / 60) {
+            editorPanel.codeEditor.update()
         }
-        thread.start()
+        editorTimer?.start()
     }
-
 }

@@ -1,17 +1,70 @@
 package com.adamkali.simpleide.browser.components;
 
+import com.adamkali.simpleide.Global;
+import com.adamkali.simpleide.editor.EditorCoordinates;
+import com.adamkali.simpleide.project.SourceFile;
+
 import javax.swing.*;
 import java.awt.*;
 
 public class FileButton extends JComponent {
+    private final String name;
+    private final int level;
+
     public FileButton(String name) {
+        this(name, 0);
+    }
+
+    public FileButton(SourceFile file, int level) {
+        this(file.getFileName(), level);
+    }
+
+    public FileButton(String name, int level) {
         super();
+        this.name = name;
+        this.level = level;
+        setFont(Global.getFont());
+        setOpaque(true);
+        setBackground(Color.WHITE);
+        setForeground(Color.BLACK);
+    }
+
+    public String getFileName() {
+        return name;
+    }
+
+    public int getLevel() {
+        return level;
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        g.drawString("File View", 10, 10);
+        g.setColor(getBackground());
+        g.fillRect(0, 0, getWidth(), getHeight());
+
+        FontMetrics fm = g.getFontMetrics();
+        int textY = (getHeight() + fm.getAscent() - fm.getDescent()) / 2;
+        int indent = EditorCoordinates.treeIndent(level);
+        g.setColor(getForeground());
+        g.setFont(getFont());
+        g.drawString(name, 16 + indent, textY);
+    }
+
+    @Override
+    public Dimension getPreferredSize() {
+        int width = getParent() != null && getParent().getWidth() > 0 ? getParent().getWidth() : 200;
+        return new Dimension(width, Global.getLineHeight() + 6);
+    }
+
+    @Override
+    public Dimension getMinimumSize() {
+        return new Dimension(80, Global.getLineHeight() + 6);
+    }
+
+    @Override
+    public Dimension getMaximumSize() {
+        return new Dimension(Integer.MAX_VALUE, getPreferredSize().height);
     }
 
     public static enum FileButtonState {

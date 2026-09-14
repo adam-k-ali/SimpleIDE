@@ -4,6 +4,7 @@ import com.adamkali.simpleide.Global
 import com.adamkali.simpleide.activity.CursorActivityListener
 import com.adamkali.simpleide.editor.io.TextPosition
 import java.awt.Color
+import java.awt.Dimension
 import java.awt.Graphics
 import javax.swing.JComponent
 
@@ -12,17 +13,14 @@ import javax.swing.JComponent
  * the current line and column number of the cursor
  */
 class StatusBar : JComponent(), CursorActivityListener {
-    /** The height of the StatusBar  */
-    val STATUS_BAR_HEIGHT = 32;
-
     /** The left margin of the StatusBar  */
-    val MARGIN_LEFT = 8;
-
-    /** The top margin of the StatusBar  */
-    val MARGIN_TOP = 4
+    val MARGIN_LEFT = 8
 
     init {
         font = Global.getFont()
+        isOpaque = true
+        preferredSize = Dimension(0, STATUS_BAR_HEIGHT)
+        minimumSize = Dimension(0, STATUS_BAR_HEIGHT)
         Global.getCursor().setActionListener(this)
     }
 
@@ -34,19 +32,28 @@ class StatusBar : JComponent(), CursorActivityListener {
         super.paintComponent(g)
         if (g == null) return
 
-        val lineHeight = Global.getLineHeight()
-
         g.color = Color.LIGHT_GRAY
-
         g.fillRect(0, 0, width, height)
+
+        g.font = font
+        val fm = g.fontMetrics
+        val textY = (height + fm.ascent - fm.descent) / 2
         g.color = Color.BLACK
-        g.drawString("SimpleIDE", MARGIN_LEFT, MARGIN_TOP + lineHeight / 2)
-        g.drawString(String.format("Line: %d, Column: %d", Global.getCursor().getLine(), Global.getCursor().getColumn()), width - 200, MARGIN_TOP + lineHeight / 2)
+        g.drawString("SimpleIDE", MARGIN_LEFT, textY)
+
+        val position = formatCursorPosition(Global.getCursor().getLine(), Global.getCursor().getColumn())
+        val positionWidth = fm.stringWidth(position)
+        g.drawString(position, width - positionWidth - MARGIN_LEFT, textY)
     }
 
     companion object {
         @JvmField
         var STATUS_BAR_HEIGHT: Int = 32
+
+        @JvmStatic
+        fun formatCursorPosition(line: Int, column: Int): String {
+            return String.format("Line: %d, Column: %d", line + 1, column + 1)
+        }
     }
 
     override fun onCursorMove(from: TextPosition, to: TextPosition) {

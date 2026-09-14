@@ -37,6 +37,10 @@ class SourcePackage(private var path: Path, private var isRoot: Boolean = false)
      * Gets the name of the package.
      */
     fun getName(): String {
-        return path.fileName.toString();
+        return path.fileName.toString()
+    }
+
+    fun getPath(): Path {
+        return path
     }
 }
