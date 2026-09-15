@@ -3,6 +3,7 @@ package com.adamkali.simpleide.editor.io.action
 import com.adamkali.simpleide.Global
 import com.adamkali.simpleide.editor.io.Document
 import com.adamkali.simpleide.editor.io.EditorCursor
+import com.adamkali.simpleide.editor.io.OpenFile
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -11,6 +12,7 @@ class BackspaceActionTest {
     @BeforeEach
     fun resetDocument() {
         Global.setCursor(EditorCursor(Document(), 0, 0))
+        OpenFile.reset()
     }
 
     @Test

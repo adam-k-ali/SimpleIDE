@@ -25,6 +25,14 @@ class SourceFile(private var path: Path) {
     }
 
     /**
+     * Gets the path of the file.
+     * @return The path of the file.
+     */
+    fun getPath(): Path {
+        return path
+    }
+
+    /**
      * The possible type of the file's contents.
      * @return The type of the file's contents.
      */

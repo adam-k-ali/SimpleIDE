@@ -5,8 +5,49 @@ class Document {
     var lines: MutableList<Line> = mutableListOf()
         private set
 
+    /**
+     * Whether [toText] should end with a newline. Loaded from the original file
+     * so a trailing newline is not painted as an extra empty line.
+     */
+    var trailingNewline: Boolean = false
+
     init {
         lines.add(Line())
+    }
+
+    /**
+     * Replaces the document with [text], normalizing CR/CRLF to LF.
+     * An empty file becomes one empty line. A trailing newline is stored in
+     * [trailingNewline] rather than as an extra painted line.
+     */
+    fun replaceText(text: String) {
+        val normalized = text.replace("\r\n", "\n").replace("\r", "\n")
+        trailingNewline = normalized.endsWith("\n")
+        val body = if (trailingNewline) normalized.removeSuffix("\n") else normalized
+        val parts = if (body.isEmpty()) {
+            listOf("")
+        } else {
+            body.split("\n")
+        }
+
+        lines.clear()
+        for (part in parts) {
+            val line = Line()
+            line.rewrite(part)
+            lines.add(line)
+        }
+        if (lines.isEmpty()) {
+            lines.add(Line())
+        }
+    }
+
+    /**
+     * Serializes the document to a single string. Lines are joined with `\n`.
+     * When [trailingNewline] is set, the result ends with `\n`.
+     */
+    fun toText(): String {
+        val body = lines.joinToString("\n") { it.toString() }
+        return if (trailingNewline) "$body\n" else body
     }
 
     fun insertLine(lineIndex: Int, line: Line) {

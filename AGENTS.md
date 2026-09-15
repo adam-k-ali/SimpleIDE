@@ -32,6 +32,7 @@ mvn --batch-mode test
 | Layout math (gutter, tabs, hit-testing) | `editor/EditorCoordinates.java` |
 | Syntax highlighting | `project/lang/Lexer.java` and `project/lang/tokens/**` only |
 | Project load / `.proj` JSON | `project/ProjectManager.kt`, `project/ProjectFile.kt` |
+| Open / save / reload source files | `editor/io/OpenFile.kt`, `editor/io/Document.kt` |
 | Project tree UI | `browser/`, `browser/components/` |
 | Window chrome | `window/AppWindow.kt`, `EditorPanel`, `StatusPanel` |
 | Theme JSON | `src/main/resources/preferences/editor-theme.json`, `editor/io/theme/ThemeLoader.kt` |
@@ -47,6 +48,7 @@ mvn --batch-mode test
 
 ```kotlin
 Global.setCursor(EditorCursor(Document(), 0, 0))
+OpenFile.reset()
 Global.setTheme(ThemeData(ThemeLoader.load("src/main/resources/preferences/editor-theme.json")))
 ```
 
@@ -57,7 +59,7 @@ Theme load in tests also depends on CWD = repo root.
 - Mixed Java and Kotlin live together under `src/main/java` (package `com.adamkali.simpleide`). New UI/project code tends to Kotlin; match the nearest files.
 - No Checkstyle, ktlint, Spotless, or EditorConfig. No env files or secrets.
 - Kotlin Maven plugin compiles `src/main/java` (`jvmTarget` 21, matching `maven.compiler.release`). Default `maven-compiler-plugin` compile executions are disabled in `pom.xml`; leave that hybrid setup alone unless you are changing the build.
-- `ProjectManager` load exists; save does not. The project tree does not open files into the editor.
+- `ProjectManager` load exists; `.proj` save does not. Clicking a file in the project tree opens it in the editor (`OpenFile`). Ctrl/Cmd+S saves, Ctrl/Cmd+R reloads from disk.
 
 ## Sample data
 

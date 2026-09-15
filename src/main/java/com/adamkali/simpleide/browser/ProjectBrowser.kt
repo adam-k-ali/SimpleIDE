@@ -4,6 +4,7 @@ import com.adamkali.simpleide.Global
 import com.adamkali.simpleide.activity.ProjectActivityListener
 import com.adamkali.simpleide.browser.components.FileButton
 import com.adamkali.simpleide.browser.components.FolderButton
+import com.adamkali.simpleide.editor.io.OpenFile
 import com.adamkali.simpleide.project.Project
 import com.adamkali.simpleide.project.ProjectManager
 import com.adamkali.simpleide.project.SourcePackage
@@ -22,6 +23,7 @@ import javax.swing.JPanel
  */
 class ProjectBrowser : JPanel(), ProjectActivityListener, MouseListener {
     private val expandedPaths = mutableSetOf<String>()
+    var onFileOpened: (() -> Unit)? = null
 
     init {
         addMouseListener(this)
@@ -94,7 +96,13 @@ class ProjectBrowser : JPanel(), ProjectActivityListener, MouseListener {
                 addPackage(child, level + 1)
             }
             for (file in sourcePackage.sourceFiles) {
-                add(FileButton(file, level + 1))
+                val fileButton = FileButton(file, level + 1)
+                fileButton.setOnFileClicked { sourceFile ->
+                    if (OpenFile.open(sourceFile.getPath())) {
+                        onFileOpened?.invoke()
+                    }
+                }
+                add(fileButton)
             }
         }
     }

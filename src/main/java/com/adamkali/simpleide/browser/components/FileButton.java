@@ -6,10 +6,15 @@ import com.adamkali.simpleide.project.SourceFile;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.function.Consumer;
 
 public class FileButton extends JComponent {
     private final String name;
     private final int level;
+    private SourceFile sourceFile;
+    private Consumer<SourceFile> onFileClicked;
 
     public FileButton(String name) {
         this(name, 0);
@@ -17,6 +22,15 @@ public class FileButton extends JComponent {
 
     public FileButton(SourceFile file, int level) {
         this(file.getFileName(), level);
+        this.sourceFile = file;
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (onFileClicked != null && sourceFile != null) {
+                    onFileClicked.accept(sourceFile);
+                }
+            }
+        });
     }
 
     public FileButton(String name, int level) {
@@ -27,6 +41,14 @@ public class FileButton extends JComponent {
         setOpaque(true);
         setBackground(Color.WHITE);
         setForeground(Color.BLACK);
+    }
+
+    public void setOnFileClicked(Consumer<SourceFile> onFileClicked) {
+        this.onFileClicked = onFileClicked;
+    }
+
+    public SourceFile getSourceFile() {
+        return sourceFile;
     }
 
     public String getFileName() {
