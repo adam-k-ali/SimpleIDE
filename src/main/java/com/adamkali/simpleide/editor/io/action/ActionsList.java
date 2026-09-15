@@ -7,6 +7,8 @@ public class ActionsList {
     public static final Action TYPE_CHARACTER = new TypeCharacterAction();
 
     public static final Action DUPLICATE_LINE = new DuplicateLineAction();
+    public static final Action MOVE_LINE_UP = new MoveLineUpAction();
+    public static final Action MOVE_LINE_DOWN = new MoveLineDownAction();
 
     public static final Action COPY = new CopyAction();
     public static final Action CUT = new CutAction();

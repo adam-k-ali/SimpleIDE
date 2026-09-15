@@ -137,6 +137,74 @@ class EditorCursor(
         moveTo(this.line + line, this.column + column)
     }
 
+    /**
+     * Moves the caret to the start of the current token, or the previous
+     * non-whitespace token. At column 0, wraps to the previous line.
+     */
+    fun moveLeftByToken() {
+        prevTokenStartPosition()?.let { moveTo(it) }
+    }
+
+    /**
+     * Moves the caret to the end of the current token, or the next
+     * non-whitespace token. At end of line, wraps to the next line.
+     */
+    fun moveRightByToken() {
+        nextTokenEndPosition()?.let { moveTo(it) }
+    }
+
+    /**
+     * Runs [move], keeping the existing selection anchor (or the pre-move caret)
+     * and setting the active end to the new caret position.
+     */
+    fun moveAndSelect(move: Runnable) {
+        val anchor = selectionStart ?: TextPosition(line, column)
+        move.run()
+        setSelection(anchor, TextPosition(line, column))
+    }
+
+    private fun nextTokenEndPosition(): TextPosition? {
+        tokenEndOnLine(line, column)?.let { return it }
+        if (line >= document.getLineCount() - 1) {
+            return null
+        }
+        val nextLine = line + 1
+        return tokenEndOnLine(nextLine, 0) ?: TextPosition(nextLine, 0)
+    }
+
+    private fun prevTokenStartPosition(): TextPosition? {
+        tokenStartOnLine(line, column)?.let { return it }
+        if (line <= 0) {
+            return null
+        }
+        val prevLine = line - 1
+        val endColumn = document.getLine(prevLine).length()
+        return tokenStartOnLine(prevLine, endColumn) ?: TextPosition(prevLine, endColumn)
+    }
+
+    private fun tokenEndOnLine(lineIndex: Int, fromColumn: Int): TextPosition? {
+        val spans = document.getLine(lineIndex).tokenSpans()
+        val containing = spans.firstOrNull { fromColumn >= it.start && fromColumn < it.end }
+        if (containing != null) {
+            return TextPosition(lineIndex, containing.end)
+        }
+        val next = spans.firstOrNull { it.start >= fromColumn }
+        return next?.let { TextPosition(lineIndex, it.end) }
+    }
+
+    private fun tokenStartOnLine(lineIndex: Int, fromColumn: Int): TextPosition? {
+        if (fromColumn <= 0) {
+            return null
+        }
+        val spans = document.getLine(lineIndex).tokenSpans()
+        val containing = spans.lastOrNull { fromColumn > it.start && fromColumn <= it.end }
+        if (containing != null) {
+            return TextPosition(lineIndex, containing.start)
+        }
+        val previous = spans.lastOrNull { it.end <= fromColumn }
+        return previous?.let { TextPosition(lineIndex, it.start) }
+    }
+
     fun getLine(): Int {
         return line
     }
