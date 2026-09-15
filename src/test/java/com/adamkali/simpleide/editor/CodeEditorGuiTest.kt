@@ -2,6 +2,7 @@ package com.adamkali.simpleide.editor
 
 import com.adamkali.simpleide.Global
 import com.adamkali.simpleide.editor.io.Document
+import com.adamkali.simpleide.editor.io.EditorClipboard
 import com.adamkali.simpleide.editor.io.EditorCursor
 import com.adamkali.simpleide.editor.io.OpenFile
 import com.adamkali.simpleide.editor.io.UnsavedChoice
@@ -29,6 +30,7 @@ class CodeEditorGuiTest {
         OpenFile.reset()
         OpenFile.showError = { _, _ -> }
         OpenFile.prompt = { UnsavedChoice.DISCARD }
+        EditorClipboard.reset()
     }
 
     @Test
@@ -225,6 +227,74 @@ class CodeEditorGuiTest {
 
         assertEquals("ac", Global.getCursor().getDocument().getLine(0).toString())
         assertEquals(1, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun ctrlC_copiesCurrentLine() {
+        "hello".forEach { ActionsList.TYPE_CHARACTER.execute(it) }
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK)
+
+        assertEquals("hello\n", EditorClipboard.getText())
+    }
+
+    @Test
+    fun metaC_copiesCurrentLine() {
+        "hello".forEach { ActionsList.TYPE_CHARACTER.execute(it) }
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_C, InputEvent.META_DOWN_MASK)
+
+        assertEquals("hello\n", EditorClipboard.getText())
+    }
+
+    @Test
+    fun ctrlX_cutsCurrentLine() {
+        "hello".forEach { ActionsList.TYPE_CHARACTER.execute(it) }
+        ActionsList.NEW_LINE.execute()
+        "world".forEach { ActionsList.TYPE_CHARACTER.execute(it) }
+        Global.getCursor().moveTo(0, 0)
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_X, InputEvent.CTRL_DOWN_MASK)
+
+        assertEquals("hello\n", EditorClipboard.getText())
+        assertEquals("world", Global.getCursor().getDocument().toText())
+    }
+
+    @Test
+    fun metaX_cutsCurrentLine() {
+        "hello".forEach { ActionsList.TYPE_CHARACTER.execute(it) }
+        ActionsList.NEW_LINE.execute()
+        "world".forEach { ActionsList.TYPE_CHARACTER.execute(it) }
+        Global.getCursor().moveTo(0, 0)
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_X, InputEvent.META_DOWN_MASK)
+
+        assertEquals("hello\n", EditorClipboard.getText())
+        assertEquals("world", Global.getCursor().getDocument().toText())
+    }
+
+    @Test
+    fun ctrlV_pastesClipboardText() {
+        "abc".forEach { ActionsList.TYPE_CHARACTER.execute(it) }
+        Global.getCursor().moveTo(0, 1)
+        EditorClipboard.setText("XY")
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_V, InputEvent.CTRL_DOWN_MASK)
+
+        assertEquals("aXYbc", Global.getCursor().getDocument().getLine(0).toString())
+        assertEquals(3, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun metaV_pastesClipboardText() {
+        "abc".forEach { ActionsList.TYPE_CHARACTER.execute(it) }
+        Global.getCursor().moveTo(0, 1)
+        EditorClipboard.setText("XY")
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_V, InputEvent.META_DOWN_MASK)
+
+        assertEquals("aXYbc", Global.getCursor().getDocument().getLine(0).toString())
+        assertEquals(3, Global.getCursor().getColumn())
     }
 
     private fun dispatchShortcut(editor: CodeEditor, keyCode: Int, modifiers: Int) {

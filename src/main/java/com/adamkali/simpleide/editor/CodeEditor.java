@@ -311,6 +311,24 @@ public class CodeEditor extends JPanel implements Scrollable {
                         ActionsList.DUPLICATE_LINE.execute();
                     }
                     break;
+                case KeyEvent.VK_C:
+                    if (isMenuShortcut(e)) {
+                        ActionsList.COPY.execute();
+                        e.consume();
+                    }
+                    break;
+                case KeyEvent.VK_X:
+                    if (isMenuShortcut(e)) {
+                        ActionsList.CUT.execute();
+                        e.consume();
+                    }
+                    break;
+                case KeyEvent.VK_V:
+                    if (isMenuShortcut(e)) {
+                        ActionsList.PASTE.execute();
+                        e.consume();
+                    }
+                    break;
                 case KeyEvent.VK_S:
                     if (isMenuShortcut(e)) {
                         ActionsList.SAVE.execute();

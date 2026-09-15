@@ -8,6 +8,10 @@ public class ActionsList {
 
     public static final Action DUPLICATE_LINE = new DuplicateLineAction();
 
+    public static final Action COPY = new CopyAction();
+    public static final Action CUT = new CutAction();
+    public static final Action PASTE = new PasteAction();
+
     public static final Action SAVE = new SaveAction();
     public static final Action RELOAD = new ReloadAction();
 }
