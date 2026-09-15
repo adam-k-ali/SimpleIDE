@@ -3,6 +3,8 @@ package com.adamkali.simpleide.editor
 import com.adamkali.simpleide.Global
 import com.adamkali.simpleide.editor.io.Document
 import com.adamkali.simpleide.editor.io.EditorCursor
+import com.adamkali.simpleide.editor.io.OpenFile
+import com.adamkali.simpleide.editor.io.UnsavedChoice
 import com.adamkali.simpleide.editor.io.action.ActionsList
 import com.adamkali.simpleide.editor.io.theme.ThemeLoader
 import com.adamkali.simpleide.preferences.ThemeData
@@ -14,12 +16,19 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.awt.Color
+import java.awt.event.InputEvent
+import java.awt.event.KeyEvent
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
 
 class CodeEditorGuiTest {
     @BeforeEach
     fun setUp() {
         Global.setCursor(EditorCursor(Document(), 0, 0))
         Global.setTheme(ThemeData(ThemeLoader.load("src/main/resources/preferences/editor-theme.json")))
+        OpenFile.reset()
+        OpenFile.showError = { _, _ -> }
+        OpenFile.prompt = { UnsavedChoice.DISCARD }
     }
 
     @Test
@@ -141,5 +150,72 @@ class CodeEditorGuiTest {
                 java.awt.event.KeyEvent.CHAR_UNDEFINED
             )
         )
+    }
+
+    @Test
+    fun ctrlS_savesTheOpenFile() {
+        val file = Files.createTempFile("simpleide-save-", ".txt")
+        file.toFile().deleteOnExit()
+        Files.writeString(file, "hello", StandardCharsets.UTF_8)
+        assertTrue(OpenFile.open(file))
+        ActionsList.TYPE_CHARACTER.execute('!')
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK)
+
+        assertEquals("!hello", Files.readString(file, StandardCharsets.UTF_8))
+        assertEquals(false, OpenFile.isDirty())
+    }
+
+    @Test
+    fun metaS_savesTheOpenFile() {
+        val file = Files.createTempFile("simpleide-save-meta-", ".txt")
+        file.toFile().deleteOnExit()
+        Files.writeString(file, "hello", StandardCharsets.UTF_8)
+        assertTrue(OpenFile.open(file))
+        ActionsList.TYPE_CHARACTER.execute('!')
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_S, InputEvent.META_DOWN_MASK)
+
+        assertEquals("!hello", Files.readString(file, StandardCharsets.UTF_8))
+    }
+
+    @Test
+    fun ctrlR_reloadsTheOpenFile() {
+        val file = Files.createTempFile("simpleide-reload-", ".txt")
+        file.toFile().deleteOnExit()
+        Files.writeString(file, "original", StandardCharsets.UTF_8)
+        assertTrue(OpenFile.open(file))
+        ActionsList.TYPE_CHARACTER.execute('x')
+        OpenFile.prompt = { UnsavedChoice.DISCARD }
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_R, InputEvent.CTRL_DOWN_MASK)
+
+        assertEquals("original", Global.getCursor().getDocument().toText())
+    }
+
+    @Test
+    fun metaR_reloadsTheOpenFile() {
+        val file = Files.createTempFile("simpleide-reload-meta-", ".txt")
+        file.toFile().deleteOnExit()
+        Files.writeString(file, "original", StandardCharsets.UTF_8)
+        assertTrue(OpenFile.open(file))
+        ActionsList.TYPE_CHARACTER.execute('x')
+        OpenFile.prompt = { UnsavedChoice.DISCARD }
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_R, InputEvent.META_DOWN_MASK)
+
+        assertEquals("original", Global.getCursor().getDocument().toText())
+    }
+
+    private fun dispatchShortcut(editor: CodeEditor, keyCode: Int, modifiers: Int) {
+        val event = KeyEvent(
+            editor,
+            KeyEvent.KEY_PRESSED,
+            System.currentTimeMillis(),
+            modifiers,
+            keyCode,
+            KeyEvent.CHAR_UNDEFINED
+        )
+        editor.keyListeners.forEach { it.keyPressed(event) }
     }
 }

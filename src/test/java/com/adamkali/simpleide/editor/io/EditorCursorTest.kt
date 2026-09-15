@@ -11,6 +11,7 @@ class EditorCursorTest {
     @BeforeEach
     fun resetDocument() {
         Global.setCursor(EditorCursor(Document(), 0, 0))
+        OpenFile.reset()
     }
 
     @Test

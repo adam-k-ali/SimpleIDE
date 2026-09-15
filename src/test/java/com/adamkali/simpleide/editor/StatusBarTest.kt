@@ -3,6 +3,7 @@ package com.adamkali.simpleide.editor
 import com.adamkali.simpleide.Global
 import com.adamkali.simpleide.editor.io.Document
 import com.adamkali.simpleide.editor.io.EditorCursor
+import com.adamkali.simpleide.editor.io.OpenFile
 import com.adamkali.simpleide.testsupport.GuiRender
 import com.adamkali.simpleide.window.StatusPanel
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -15,6 +16,7 @@ class StatusBarTest {
     @BeforeEach
     fun resetCursor() {
         Global.setCursor(EditorCursor(Document(), 0, 0))
+        OpenFile.reset()
     }
 
     @Test

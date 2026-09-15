@@ -7,4 +7,7 @@ public class ActionsList {
     public static final Action TYPE_CHARACTER = new TypeCharacterAction();
 
     public static final Action DUPLICATE_LINE = new DuplicateLineAction();
+
+    public static final Action SAVE = new SaveAction();
+    public static final Action RELOAD = new ReloadAction();
 }

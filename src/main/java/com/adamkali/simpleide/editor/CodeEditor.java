@@ -245,8 +245,20 @@ public class CodeEditor extends JPanel implements Scrollable {
             return keyCode >= 0 && keys.get(keyCode);
         }
 
+        /**
+         * True when Ctrl or Cmd is held. Avoids Toolkit.getMenuShortcutKeyMaskEx(),
+         * which throws HeadlessException in tests/CI.
+         */
+        private boolean isMenuShortcut(KeyEvent e) {
+            int mods = e.getModifiersEx();
+            return (mods & (InputEvent.CTRL_DOWN_MASK | InputEvent.META_DOWN_MASK)) != 0;
+        }
+
         @Override
         public void keyTyped(KeyEvent e) {
+            if (isMenuShortcut(e)) {
+                return;
+            }
             Global.getCursor().clearSelection();
             switch (e.getKeyChar()) {
                 case KeyEvent.VK_ENTER:
@@ -294,6 +306,18 @@ public class CodeEditor extends JPanel implements Scrollable {
                 case KeyEvent.VK_D:
                     if (isDown(KeyEvent.VK_CONTROL)) {
                         ActionsList.DUPLICATE_LINE.execute();
+                    }
+                    break;
+                case KeyEvent.VK_S:
+                    if (isMenuShortcut(e)) {
+                        ActionsList.SAVE.execute();
+                        e.consume();
+                    }
+                    break;
+                case KeyEvent.VK_R:
+                    if (isMenuShortcut(e)) {
+                        ActionsList.RELOAD.execute();
+                        e.consume();
                     }
                     break;
                 default:

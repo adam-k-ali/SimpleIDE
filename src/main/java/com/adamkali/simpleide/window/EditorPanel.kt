@@ -27,6 +27,7 @@ class EditorPanel : JPanel() {
         constraints.gridy = 0
 
         add(projectBrowser, constraints)
+        projectBrowser.onFileOpened = { codeEditor.requestFocusInWindow() }
 
         // Code Editor
         val viewport = JViewport()

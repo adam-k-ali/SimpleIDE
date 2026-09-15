@@ -61,6 +61,20 @@ class FolderButtonGuiTest {
 
 class FileButtonGuiTest {
     @Test
+    fun click_invokesOnFileClickedWithSourceFile() {
+        val source = SourceFile(Paths.get("src/Main.java"))
+        val button = FileButton(source, 1)
+        var clicked: SourceFile? = null
+        button.setOnFileClicked { clicked = it }
+
+        button.size = button.preferredSize
+        GuiRender.click(button)
+
+        assertEquals(source, clicked)
+        assertEquals(source.getPath(), clicked!!.getPath())
+    }
+
+    @Test
     fun paintsFileNameInsteadOfPlaceholder() {
         val button = FileButton(SourceFile(Paths.get("src/Main.java")), 1)
         assertEquals("Main.java", button.fileName)
