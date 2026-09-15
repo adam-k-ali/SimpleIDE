@@ -118,4 +118,111 @@ class EditorCursorTest {
         assertEquals(1, Global.getCursor().getLine())
         assertEquals(1, Global.getCursor().getColumn())
     }
+
+    @Test
+    fun moveAndSelect_growsAndShrinksFromAnchor() {
+        Global.getCursor().getDocument().replaceText("abcd")
+        Global.getCursor().moveTo(0, 1)
+
+        Global.getCursor().moveAndSelect { Global.getCursor().moveRight() }
+        assertEquals("b", Global.getCursor().getSelectedText())
+        assertEquals(2, Global.getCursor().getColumn())
+
+        Global.getCursor().moveAndSelect { Global.getCursor().moveRight() }
+        assertEquals("bc", Global.getCursor().getSelectedText())
+        assertEquals(3, Global.getCursor().getColumn())
+
+        Global.getCursor().moveAndSelect { Global.getCursor().moveLeft() }
+        assertEquals("b", Global.getCursor().getSelectedText())
+
+        Global.getCursor().moveAndSelect { Global.getCursor().moveLeft() }
+        assertNull(Global.getCursor().getSelectedText())
+        assertEquals(1, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun moveRightByToken_stopsAtNonWhitespaceTokenEnds() {
+        Global.getCursor().getDocument().replaceText("int x = 10;")
+        Global.getCursor().moveTo(0, 0)
+
+        val stops = mutableListOf<Int>()
+        repeat(5) {
+            Global.getCursor().moveRightByToken()
+            stops.add(Global.getCursor().getColumn())
+        }
+
+        assertEquals(listOf(3, 5, 7, 10, 11), stops)
+        assertEquals(0, Global.getCursor().getLine())
+    }
+
+    @Test
+    fun moveLeftByToken_stopsAtNonWhitespaceTokenStarts() {
+        Global.getCursor().getDocument().replaceText("int x = 10;")
+        Global.getCursor().moveTo(0, 11)
+
+        val stops = mutableListOf<Int>()
+        repeat(5) {
+            Global.getCursor().moveLeftByToken()
+            stops.add(Global.getCursor().getColumn())
+        }
+
+        assertEquals(listOf(10, 8, 6, 4, 0), stops)
+    }
+
+    @Test
+    fun moveRightByToken_treatsOperatorsAsSeparateTokens() {
+        Global.getCursor().getDocument().replaceText("foo.bar")
+        Global.getCursor().moveTo(0, 0)
+
+        Global.getCursor().moveRightByToken()
+        assertEquals(3, Global.getCursor().getColumn())
+        Global.getCursor().moveRightByToken()
+        assertEquals(4, Global.getCursor().getColumn())
+        Global.getCursor().moveRightByToken()
+        assertEquals(7, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun moveRightByToken_wrapsToNextLine() {
+        Global.getCursor().getDocument().replaceText("foo\nbar")
+        Global.getCursor().moveTo(0, 3)
+
+        Global.getCursor().moveRightByToken()
+
+        assertEquals(1, Global.getCursor().getLine())
+        assertEquals(3, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun moveLeftByToken_wrapsToPreviousLine() {
+        Global.getCursor().getDocument().replaceText("foo\nbar")
+        Global.getCursor().moveTo(1, 0)
+
+        Global.getCursor().moveLeftByToken()
+
+        assertEquals(0, Global.getCursor().getLine())
+        assertEquals(0, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun moveLeftByToken_isNoOpAtDocumentStart() {
+        Global.getCursor().getDocument().replaceText("foo")
+        Global.getCursor().moveTo(0, 0)
+
+        Global.getCursor().moveLeftByToken()
+
+        assertEquals(0, Global.getCursor().getLine())
+        assertEquals(0, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun moveRightByToken_isNoOpAtDocumentEnd() {
+        Global.getCursor().getDocument().replaceText("foo")
+        Global.getCursor().moveTo(0, 3)
+
+        Global.getCursor().moveRightByToken()
+
+        assertEquals(0, Global.getCursor().getLine())
+        assertEquals(3, Global.getCursor().getColumn())
+    }
 }

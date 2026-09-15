@@ -5,6 +5,7 @@ import com.adamkali.simpleide.editor.io.Document
 import com.adamkali.simpleide.editor.io.EditorClipboard
 import com.adamkali.simpleide.editor.io.EditorCursor
 import com.adamkali.simpleide.editor.io.OpenFile
+import com.adamkali.simpleide.editor.io.TextPosition
 import com.adamkali.simpleide.editor.io.UnsavedChoice
 import com.adamkali.simpleide.editor.io.action.ActionsList
 import com.adamkali.simpleide.editor.io.theme.ThemeLoader
@@ -294,6 +295,86 @@ class CodeEditorGuiTest {
         dispatchShortcut(CodeEditor(), KeyEvent.VK_V, InputEvent.META_DOWN_MASK)
 
         assertEquals("aXYbc", Global.getCursor().getDocument().getLine(0).toString())
+        assertEquals(3, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun shiftRight_selectsByCharacter() {
+        Global.getCursor().getDocument().replaceText("abcd")
+        Global.getCursor().moveTo(0, 1)
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_RIGHT, InputEvent.SHIFT_DOWN_MASK)
+
+        assertEquals("b", Global.getCursor().getSelectedText())
+        assertEquals(2, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun shiftDown_extendsSelectionToNextLine() {
+        Global.getCursor().getDocument().replaceText("ab\ncd")
+        Global.getCursor().moveTo(0, 1)
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_DOWN, InputEvent.SHIFT_DOWN_MASK)
+
+        assertEquals("b\nc", Global.getCursor().getSelectedText())
+        assertEquals(1, Global.getCursor().getLine())
+        assertEquals(1, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun altRight_movesByTokenWithoutSelecting() {
+        Global.getCursor().getDocument().replaceText("int x = 10;")
+        Global.getCursor().moveTo(0, 0)
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_RIGHT, InputEvent.ALT_DOWN_MASK)
+
+        assertEquals(3, Global.getCursor().getColumn())
+        assertEquals(null, Global.getCursor().getSelectedText())
+    }
+
+    @Test
+    fun ctrlAltRight_selectsByToken() {
+        Global.getCursor().getDocument().replaceText("int x = 10;")
+        Global.getCursor().moveTo(0, 0)
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_RIGHT, InputEvent.CTRL_DOWN_MASK or InputEvent.ALT_DOWN_MASK)
+
+        assertEquals("int", Global.getCursor().getSelectedText())
+        assertEquals(3, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun metaAltRight_selectsByToken() {
+        Global.getCursor().getDocument().replaceText("int x = 10;")
+        Global.getCursor().moveTo(0, 0)
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_RIGHT, InputEvent.META_DOWN_MASK or InputEvent.ALT_DOWN_MASK)
+
+        assertEquals("int", Global.getCursor().getSelectedText())
+        assertEquals(3, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun altUp_movesCurrentLineUpWithCaret() {
+        Global.getCursor().getDocument().replaceText("first\nsecond")
+        Global.getCursor().moveTo(1, 2)
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_UP, InputEvent.ALT_DOWN_MASK)
+
+        assertEquals("second\nfirst", Global.getCursor().getDocument().toText())
+        assertEquals(0, Global.getCursor().getLine())
+        assertEquals(2, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun bareRight_clearsSelectionThenMoves() {
+        Global.getCursor().getDocument().replaceText("abcd")
+        Global.getCursor().moveTo(0, 2)
+        Global.getCursor().setSelection(TextPosition(0, 1), TextPosition(0, 2))
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_RIGHT, 0)
+
+        assertEquals(null, Global.getCursor().getSelectedText())
         assertEquals(3, Global.getCursor().getColumn())
     }
 
