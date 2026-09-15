@@ -9,6 +9,7 @@ import com.adamkali.simpleide.project.Project
 import com.adamkali.simpleide.project.ProjectManager
 import com.adamkali.simpleide.project.SourcePackage
 import java.awt.Color
+import java.awt.Component
 import java.awt.Graphics
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
@@ -33,7 +34,9 @@ class ProjectBrowser : JPanel(), ProjectActivityListener, MouseListener {
         isOpaque = true
 
         layout = BoxLayout(this, BoxLayout.Y_AXIS)
-        add(JLabel("Project Browser"))
+        val title = JLabel("Project Browser")
+        title.alignmentX = Component.LEFT_ALIGNMENT
+        add(title)
 
         ProjectManager.registerCallback(this)
 
