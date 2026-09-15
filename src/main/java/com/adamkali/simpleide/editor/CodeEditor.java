@@ -100,6 +100,7 @@ public class CodeEditor extends JPanel implements Scrollable {
 
         g.setColor(EditorColors.editorForeground());
         g.drawLine(x, y, x, y + EditorCoordinates.CURSOR_HEIGHT);
+    }
 
     private void drawText(Graphics g) {
         int pxColumn = 0;
