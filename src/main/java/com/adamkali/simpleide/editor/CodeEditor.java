@@ -12,16 +12,11 @@ import com.adamkali.simpleide.project.lang.tokens.Token;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.BitSet;
 
 public class CodeEditor extends JPanel implements Scrollable {
-    private static final int LINE_NUM_WIDTH = 64;
-    private static final int MARGIN_LEFT = 8;
-    private static final int MARGIN_TOP = 4;
     private static final int CHARACTER_WIDTH = 8;
 
-    private static final int CURSOR_OFFSET_X = 0;
-    private static final int CURSOR_OFFSET_Y = 4;
-    private static final int CURSOR_HEIGHT = 16;
     private static final long CURSOR_PERIOD = 500L;
 
     private boolean cursorVisible;
@@ -52,23 +47,28 @@ public class CodeEditor extends JPanel implements Scrollable {
      * @return The width of the string (in pixels).
      */
     private int getStringWidthUpToColumn(int column) {
-        return Global.getStringWidth(Global.getCursor().getDocument().getLine(Global.getCursor().getLine()).substring(0, column));
+        return EditorCoordinates.visualWidth(
+                Global.getCursor().getDocument().getLine(Global.getCursor().getLine()).substring(0, column),
+                Global::getStringWidth
+        );
     }
 
     private void expandCanvas(FontMetrics fontMetrics) {
         int numberOfLines = Global.getCursor().getDocument().getLineCount();
 
         int documentHeight = (numberOfLines + 6) * Global.getLineHeight();
-        int documentWidth = 800;
+        int documentWidth = EditorCoordinates.LINE_NUM_WIDTH + EditorCoordinates.MARGIN_LEFT + 800;
 
         for (int i = 0; i < numberOfLines; i++) {
-            int lineWidth = Global.getStringWidth(Global.getCursor().getDocument().getLine(i).toString());
+            int lineWidth = EditorCoordinates.LINE_NUM_WIDTH + EditorCoordinates.MARGIN_LEFT
+                    + EditorCoordinates.visualWidth(Global.getCursor().getDocument().getLine(i).toString(), Global::getStringWidth);
             if (lineWidth > documentWidth) {
                 documentWidth = lineWidth;
             }
         }
 
-        setPreferredSize(new Dimension(documentWidth, Math.max(this.getParent().getHeight(), documentHeight)));
+        int parentHeight = getParent() == null ? Math.max(getHeight(), documentHeight) : getParent().getHeight();
+        setPreferredSize(new Dimension(documentWidth, Math.max(parentHeight, documentHeight)));
         revalidate();
     }
 
@@ -87,20 +87,19 @@ public class CodeEditor extends JPanel implements Scrollable {
 
     private void drawLineNumbers(Graphics g) {
         g.setColor(Color.LIGHT_GRAY);
-        g.fillRect(0, 0, LINE_NUM_WIDTH, getHeight());
+        g.fillRect(0, 0, EditorCoordinates.LINE_NUM_WIDTH, getHeight());
         g.setColor(Color.BLACK);
         for (int i = 0; i < Global.getCursor().getDocument().getLineCount(); i++) {
-            g.drawString(String.valueOf(i + 1), MARGIN_LEFT, MARGIN_TOP + (i + 1) * Global.getLineHeight());
+            g.drawString(String.valueOf(i + 1), EditorCoordinates.MARGIN_LEFT, EditorCoordinates.MARGIN_TOP + (i + 1) * Global.getLineHeight());
         }
     }
 
     private void drawCursor(Graphics g) {
-        int stringWidth = Global.getStringWidth(Global.getCursor().getTextBeforeCursor());
+        int x = EditorCoordinates.cursorX(Global.getCursor().getTextBeforeCursor(), Global::getStringWidth);
+        int y = EditorCoordinates.cursorY(Global.getCursor().getLine(), Global.getLineHeight());
 
-        g.drawLine(LINE_NUM_WIDTH + MARGIN_LEFT + stringWidth + CURSOR_OFFSET_X,
-                MARGIN_TOP + Global.getCursor().getLine() * Global.getLineHeight() + CURSOR_OFFSET_Y,
-                LINE_NUM_WIDTH + MARGIN_LEFT + stringWidth + CURSOR_OFFSET_X,
-                MARGIN_TOP + Global.getCursor().getLine() * Global.getLineHeight() + CURSOR_HEIGHT + CURSOR_OFFSET_Y);
+        g.setColor(Color.BLACK);
+        g.drawLine(x, y, x, y + EditorCoordinates.CURSOR_HEIGHT);
     }
 
     private void drawText(Graphics g) {
@@ -122,16 +121,19 @@ public class CodeEditor extends JPanel implements Scrollable {
                 }
 
                 stringWidth = Global.getStringWidth(textToRender);
-                g.setColor(token.getBackgroundColor());
-                g.fillRect(LINE_NUM_WIDTH + MARGIN_LEFT + pxColumn, MARGIN_TOP + pxRow - Global.getLineHeight() + 2, stringWidth, Global.getLineHeight());
+                Color background = token.getBackgroundColor();
+                if (background != null && !background.equals(EditorColors.PLAINTEXT_BG_COLOR)) {
+                    g.setColor(background);
+                    g.fillRect(EditorCoordinates.LINE_NUM_WIDTH + EditorCoordinates.MARGIN_LEFT + pxColumn, EditorCoordinates.MARGIN_TOP + pxRow - Global.getLineHeight() + 2, stringWidth, Global.getLineHeight());
+                }
 
                 if (!token.getValid()) {
                     g.setColor(Color.RED);
-                    g.drawLine(LINE_NUM_WIDTH + MARGIN_LEFT + pxColumn, MARGIN_TOP + pxRow, LINE_NUM_WIDTH + MARGIN_LEFT + pxColumn + stringWidth, MARGIN_TOP + pxRow);
+                    g.drawLine(EditorCoordinates.LINE_NUM_WIDTH + EditorCoordinates.MARGIN_LEFT + pxColumn, EditorCoordinates.MARGIN_TOP + pxRow, EditorCoordinates.LINE_NUM_WIDTH + EditorCoordinates.MARGIN_LEFT + pxColumn + stringWidth, EditorCoordinates.MARGIN_TOP + pxRow);
                 }
 
                 g.setColor(token.getForegroundColor());
-                g.drawString(textToRender, LINE_NUM_WIDTH + MARGIN_LEFT + pxColumn, MARGIN_TOP + pxRow);
+                g.drawString(textToRender, EditorCoordinates.LINE_NUM_WIDTH + EditorCoordinates.MARGIN_LEFT + pxColumn, EditorCoordinates.MARGIN_TOP + pxRow);
                 pxColumn += stringWidth;
             }
             pxRow += Global.getLineHeight();
@@ -140,8 +142,12 @@ public class CodeEditor extends JPanel implements Scrollable {
     }
 
     private void highlightCurrentLine(Graphics g) {
+        if (Global.getTheme() == null || Global.getTheme().getCurrentLineColor().getColor() == null) {
+            return;
+        }
         g.setColor(Global.getTheme().getCurrentLineColor().getColor().foregroundColor());
-        g.fillRect(0, MARGIN_TOP + Global.getCursor().getLine() * Global.getLineHeight() + 2, getWidth(), Global.getLineHeight());
+        int y = EditorCoordinates.lineTop(Global.getCursor().getLine(), Global.getLineHeight());
+        g.fillRect(EditorCoordinates.textAreaX(), y, Math.max(0, getWidth() - EditorCoordinates.textAreaX()), Global.getLineHeight());
     }
 
     private void drawSelectionOverlay(Graphics g) {
@@ -156,23 +162,23 @@ public class CodeEditor extends JPanel implements Scrollable {
         TextPosition to = selectionStart.compareTo(selectionEnd) < 0 ? selectionEnd : selectionStart;
 
         if (from.getLine() == to.getLine()) {
-            int stringWidth = Global.getStringWidth(Global.getCursor().getDocument().getLine(from.getLine()).substring(from.getColumn(), to.getColumn()));
+            int stringWidth = EditorCoordinates.visualWidth(Global.getCursor().getDocument().getLine(from.getLine()).substring(from.getColumn(), to.getColumn()), Global::getStringWidth);
             g.setColor(EditorColors.SELECTION_COLOR);
-            g.fillRect(LINE_NUM_WIDTH + MARGIN_LEFT + Global.getStringWidth(Global.getCursor().getDocument().getLine(from.getLine()).substring(0, from.getColumn())),
-                    MARGIN_TOP + from.getLine() * Global.getLineHeight() + 2, stringWidth, Global.getLineHeight());
+            g.fillRect(EditorCoordinates.LINE_NUM_WIDTH + EditorCoordinates.MARGIN_LEFT + EditorCoordinates.visualWidth(Global.getCursor().getDocument().getLine(from.getLine()).substring(0, from.getColumn()), Global::getStringWidth),
+                    EditorCoordinates.lineTop(from.getLine(), Global.getLineHeight()), stringWidth, Global.getLineHeight());
         } else {
-            int stringWidth = Global.getStringWidth(Global.getCursor().getDocument().getLine(from.getLine()).substring(from.getColumn(), Global.getCursor().getDocument().getLine(from.getLine()).length()));
+            int stringWidth = EditorCoordinates.visualWidth(Global.getCursor().getDocument().getLine(from.getLine()).substring(from.getColumn(), Global.getCursor().getDocument().getLine(from.getLine()).length()), Global::getStringWidth);
             g.setColor(EditorColors.SELECTION_COLOR);
-            g.fillRect(LINE_NUM_WIDTH + MARGIN_LEFT + Global.getStringWidth(Global.getCursor().getDocument().getLine(from.getLine()).substring(0, from.getColumn())),
-                    MARGIN_TOP + from.getLine() * Global.getLineHeight() + 2, stringWidth, Global.getLineHeight());
+            g.fillRect(EditorCoordinates.LINE_NUM_WIDTH + EditorCoordinates.MARGIN_LEFT + EditorCoordinates.visualWidth(Global.getCursor().getDocument().getLine(from.getLine()).substring(0, from.getColumn()), Global::getStringWidth),
+                    EditorCoordinates.lineTop(from.getLine(), Global.getLineHeight()), stringWidth, Global.getLineHeight());
 
             for (int i = from.getLine() + 1; i < to.getLine(); i++) {
-                stringWidth = Global.getStringWidth(Global.getCursor().getDocument().getLine(i).toString());
-                g.fillRect(LINE_NUM_WIDTH + MARGIN_LEFT, MARGIN_TOP + i * Global.getLineHeight() + 2, stringWidth, Global.getLineHeight());
+                stringWidth = EditorCoordinates.visualWidth(Global.getCursor().getDocument().getLine(i).toString(), Global::getStringWidth);
+                g.fillRect(EditorCoordinates.LINE_NUM_WIDTH + EditorCoordinates.MARGIN_LEFT, EditorCoordinates.lineTop(i, Global.getLineHeight()), stringWidth, Global.getLineHeight());
             }
 
-            stringWidth = Global.getStringWidth(Global.getCursor().getDocument().getLine(to.getLine()).substring(0, to.getColumn()));
-            g.fillRect(LINE_NUM_WIDTH + MARGIN_LEFT, MARGIN_TOP + to.getLine() * Global.getLineHeight() + 2, stringWidth, Global.getLineHeight());
+            stringWidth = EditorCoordinates.visualWidth(Global.getCursor().getDocument().getLine(to.getLine()).substring(0, to.getColumn()), Global::getStringWidth);
+            g.fillRect(EditorCoordinates.LINE_NUM_WIDTH + EditorCoordinates.MARGIN_LEFT, EditorCoordinates.lineTop(to.getLine(), Global.getLineHeight()), stringWidth, Global.getLineHeight());
         }
     }
 
@@ -182,18 +188,17 @@ public class CodeEditor extends JPanel implements Scrollable {
         g.setFont(Global.getFont());
         g.setColor(Color.BLACK);
 
+        // Highlight sits behind text so glyphs, selection, and the cursor stay readable.
+        highlightCurrentLine(g);
         drawText(g);
         drawSelectionOverlay(g);
 
-        // Draw cursor
         if (cursorVisible) {
             drawCursor(g);
         }
 
-        // Draw line numbers
+        // Gutter is painted last so the current-line tint never covers line numbers.
         drawLineNumbers(g);
-
-        highlightCurrentLine(g);
     }
 
     @Override
@@ -222,11 +227,23 @@ public class CodeEditor extends JPanel implements Scrollable {
     }
 
     private static class KeyboardHandler implements KeyListener {
-        // Keeps track of which keys are pressed
-        private static boolean[] keys = new boolean[256];
+        // Keeps track of which keys are pressed. A BitSet grows past 256 so
+        // extended key codes cannot throw ArrayIndexOutOfBoundsException.
+        private final BitSet keys = new BitSet();
 
         // The number of spaces to insert when the tab key is pressed
         private static final int TAB_WIDTH = 4;
+
+        private void setKey(int keyCode, boolean pressed) {
+            if (keyCode < 0) {
+                return;
+            }
+            keys.set(keyCode, pressed);
+        }
+
+        private boolean isDown(int keyCode) {
+            return keyCode >= 0 && keys.get(keyCode);
+        }
 
         @Override
         public void keyTyped(KeyEvent e) {
@@ -255,7 +272,7 @@ public class CodeEditor extends JPanel implements Scrollable {
 
         @Override
         public void keyPressed(KeyEvent e) {
-            keys[e.getKeyCode()] = true;
+            setKey(e.getKeyCode(), true);
             switch (e.getKeyCode()) {
                 case KeyEvent.VK_LEFT:
                     Global.getCursor().clearSelection();
@@ -275,7 +292,7 @@ public class CodeEditor extends JPanel implements Scrollable {
                     break;
 
                 case KeyEvent.VK_D:
-                    if (keys[KeyEvent.VK_CONTROL]) {
+                    if (isDown(KeyEvent.VK_CONTROL)) {
                         ActionsList.DUPLICATE_LINE.execute();
                     }
                     break;
@@ -286,7 +303,7 @@ public class CodeEditor extends JPanel implements Scrollable {
 
         @Override
         public void keyReleased(KeyEvent e) {
-            keys[e.getKeyCode()] = false;
+            setKey(e.getKeyCode(), false);
         }
     }
 
@@ -297,20 +314,15 @@ public class CodeEditor extends JPanel implements Scrollable {
         private int lastY;
 
         private int getLine(int y) {
-            int line = (y - MARGIN_TOP) / Global.getLineHeight();
-            if (line < 0) {
-                return 0;
-            }
-            return Math.min(line, Global.getCursor().getDocument().getLineCount() - 1);
+            return EditorCoordinates.lineAt(y, Global.getLineHeight(), Global.getCursor().getDocument().getLineCount());
         }
 
         private int getColumn(int x, int line) {
-            int xp = x - LINE_NUM_WIDTH - MARGIN_LEFT;
-            if (xp < CHARACTER_WIDTH) {
-                return 0;
-            }
-            int column = xp / CHARACTER_WIDTH + 1;
-            return Math.min(column, Global.getCursor().getDocument().getLine(line).length());
+            return EditorCoordinates.columnAt(
+                    x,
+                    Global.getCursor().getDocument().getLine(line).toString(),
+                    Global::getStringWidth
+            );
         }
 
 
@@ -333,6 +345,11 @@ public class CodeEditor extends JPanel implements Scrollable {
             firstY = e.getY();
             lastX = e.getX();
             lastY = e.getY();
+
+            int line = getLine(firstY);
+            int column = getColumn(firstX, line);
+            Global.getCursor().clearSelection();
+            Global.getCursor().moveTo(line, column);
         }
 
         @Override
@@ -343,8 +360,6 @@ public class CodeEditor extends JPanel implements Scrollable {
         public void mouseEntered(MouseEvent e) {
             Cursor cursor = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR);
             setCursor(cursor);
-//            c.setBorder(highlighted);
-//            entered = c;
         }
 
         @Override
@@ -357,14 +372,13 @@ public class CodeEditor extends JPanel implements Scrollable {
         public void mouseDragged(MouseEvent e) {
             lastX = e.getX();
             lastY = e.getY();
-            // Print range of selected text
             int firstLine = getLine(firstY);
             int firstColumn = getColumn(firstX, firstLine);
 
             int lastLine = getLine(lastY);
             int lastColumn = getColumn(lastX, lastLine);
 
-            Global.getCursor().setSelection(new TextPosition(firstColumn, firstLine), new TextPosition(lastColumn, lastLine));
+            Global.getCursor().setSelection(new TextPosition(firstLine, firstColumn), new TextPosition(lastLine, lastColumn));
             Global.getCursor().moveTo(lastLine, lastColumn);
 
 

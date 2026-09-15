@@ -1,7 +1,7 @@
 package com.adamkali.simpleide.project.lang.tokens
 
 import com.adamkali.simpleide.project.lang.tokens.literal.LiteralToken
-import org.apache.commons.lang.StringEscapeUtils
+import org.apache.commons.lang3.StringEscapeUtils
 import java.awt.Color
 
 abstract class Token(

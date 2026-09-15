@@ -1,10 +1,13 @@
 package com.adamkali.simpleide.browser.components
 
 import com.adamkali.simpleide.Global
+import com.adamkali.simpleide.editor.EditorCoordinates
 import com.adamkali.simpleide.project.SourcePackage
 import java.awt.Color
 import java.awt.Dimension
 import java.awt.Graphics
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
 import javax.swing.JComponent
 import javax.swing.SwingConstants
 
@@ -14,24 +17,36 @@ class FolderButton(private val folder: SourcePackage) : JComponent(), SwingConst
 
     /** Whether the folder has been 'dropped' to show its contents.  */
     var dropped = false
+        set(value) {
+            if (field != value) {
+                field = value
+                repaint()
+            }
+        }
 
     /** The level from the root folder. 0 if root.  */
     var level = 0
+
+    var onDroppedChanged: (() -> Unit)? = null
 
     fun getText(): String {
         return folder.getName()
     }
 
     init {
-        // Set layout to Box_Layout.X_AXIS
-//        layout = BoxLayout(this, BoxLayout.X_AXIS)
-//        repaint()
+        font = Global.getFont()
+        isOpaque = true
+        background = Color.WHITE
+        foreground = Color.BLACK
+        addMouseListener(object : MouseAdapter() {
+            override fun mouseClicked(e: MouseEvent) {
+                dropped = !dropped
+                onDroppedChanged?.invoke()
+            }
+        })
     }
 
-    private fun drawArrow(g: Graphics?, direction: Direction, x: Int, y: Int, width: Int, height: Int) {
-        if (g == null) return
-
-        // Draw a dropdown arrow
+    private fun drawArrow(g: Graphics, direction: Direction, x: Int, y: Int, width: Int, height: Int) {
         if (direction == Direction.DOWN) {
             g.drawLine(x, y, x + width / 2, y + height)
             g.drawLine(x + width, y, x + width / 2, y + height)
@@ -41,36 +56,40 @@ class FolderButton(private val folder: SourcePackage) : JComponent(), SwingConst
         }
     }
 
-    override fun paint(g: Graphics?) {
-        super.paint(g)
-        if (g == null) return
+    override fun paintComponent(g: Graphics) {
+        super.paintComponent(g)
 
-        val lineHeight = g.fontMetrics.height
+        g.color = if (selected) Color(230, 230, 255) else background
+        g.fillRect(0, 0, width, height)
 
-        // Draw a dropdown arrow
-        drawArrow(g, Direction.UP, 5, lineHeight, 4, 4)
+        val indent = EditorCoordinates.treeIndent(level)
+        val arrowSize = 8
+        val arrowX = 6 + indent
+        val arrowY = (height - arrowSize) / 2
+        val direction = if (dropped) Direction.DOWN else Direction.RIGHT
 
-        // Draw the folder name
-        g.drawString(folder.getName(), 16, lineHeight)
+        g.color = foreground
+        drawArrow(g, direction, arrowX, arrowY, arrowSize, arrowSize)
 
-        // Draw red border to debug
-        g.color = Color.RED;
-        g.drawRect(0, 0, width - 1, height - 1)
-        println(height)
+        val fm = g.fontMetrics
+        val textY = (height + fm.ascent - fm.descent) / 2
+        g.drawString(folder.getName(), arrowX + arrowSize + 6, textY)
     }
 
-    /**
-     * @return getPreferredSize(c)
-     */
+    override fun getPreferredSize(): Dimension {
+        val width = parent?.width?.takeIf { it > 0 } ?: 200
+        return Dimension(width, Global.getLineHeight() + 6)
+    }
+
+    override fun getMinimumSize(): Dimension {
+        return Dimension(80, Global.getLineHeight() + 6)
+    }
+
     override fun getMaximumSize(): Dimension {
-        val maxWidth = this.parent.width
-        val maxHeight = Global.getLineHeight() + 2
-        return Dimension(maxWidth, maxHeight)
+        return Dimension(Integer.MAX_VALUE, preferredSize.height)
     }
 
     private enum class Direction {
-        UP, DOWN
+        RIGHT, DOWN
     }
-
-
 }

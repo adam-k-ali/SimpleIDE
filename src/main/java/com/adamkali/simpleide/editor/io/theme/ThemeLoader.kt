@@ -7,8 +7,17 @@ import java.io.File
 
 object ThemeLoader {
     fun load(path: String): Theme {
-        val jsonString = File(path).readText()
-        return loads(jsonString)
+        val file = File(path)
+        if (file.exists()) {
+            return loads(file.readText())
+        }
+
+        val classpathPath = path
+            .removePrefix("src/main/resources/")
+            .removePrefix("src/test/resources/")
+        val stream = ThemeLoader::class.java.classLoader.getResourceAsStream(classpathPath)
+            ?: throw java.io.FileNotFoundException("Theme file not found: $path")
+        return loads(stream.bufferedReader().use { it.readText() })
     }
 
     fun loads(s: String): Theme {

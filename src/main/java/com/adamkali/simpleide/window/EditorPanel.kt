@@ -2,6 +2,7 @@ package com.adamkali.simpleide.window
 
 import com.adamkali.simpleide.browser.ProjectBrowser
 import com.adamkali.simpleide.editor.CodeEditor
+import java.awt.Dimension
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import javax.swing.JPanel
@@ -14,6 +15,7 @@ class EditorPanel : JPanel() {
 
     init {
         this.layout = GridBagLayout()
+        maximumSize = Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE)
 
         val constraints = GridBagConstraints()
         constraints.fill = GridBagConstraints.BOTH

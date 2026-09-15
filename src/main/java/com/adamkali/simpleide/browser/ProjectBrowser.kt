@@ -2,9 +2,11 @@ package com.adamkali.simpleide.browser
 
 import com.adamkali.simpleide.Global
 import com.adamkali.simpleide.activity.ProjectActivityListener
+import com.adamkali.simpleide.browser.components.FileButton
 import com.adamkali.simpleide.browser.components.FolderButton
 import com.adamkali.simpleide.project.Project
 import com.adamkali.simpleide.project.ProjectManager
+import com.adamkali.simpleide.project.SourcePackage
 import java.awt.Color
 import java.awt.Graphics
 import java.awt.event.MouseEvent
@@ -19,15 +21,17 @@ import javax.swing.JPanel
  * The ProjectBrowser class is a JPanel that displays the project structure.
  */
 class ProjectBrowser : JPanel(), ProjectActivityListener, MouseListener {
+    private val expandedPaths = mutableSetOf<String>()
+
     init {
         addMouseListener(this)
 
         font = Global.getFont()
+        background = Color.WHITE
+        isOpaque = true
 
         layout = BoxLayout(this, BoxLayout.Y_AXIS)
         add(JLabel("Project Browser"))
-
-//        add(JLabel("Source Folders"))
 
         ProjectManager.registerCallback(this)
 
@@ -37,11 +41,6 @@ class ProjectBrowser : JPanel(), ProjectActivityListener, MouseListener {
         } catch (e: FileNotFoundException) {
             throw RuntimeException(e)
         }
-
-//        var button = FolderButton(ProjectManager.activeProject!!.sourceFolders[0])
-////        button.setSize(100, 20)
-//        button.setBounds(10, 10, 100, 20)
-//        add(button)
     }
 
     /**
@@ -53,51 +52,63 @@ class ProjectBrowser : JPanel(), ProjectActivityListener, MouseListener {
 
         if (g == null) return
 
-        // Draw background
-        g.color = Color.WHITE
+        g.color = background
         g.fillRect(0, 0, width, height)
 
-        // Draw border
         g.color = Color.GRAY
         g.drawRect(0, 0, width - 1, height - 1)
-
     }
 
+    private fun rebuildTree() {
+        val stale = components.filter { it is FolderButton || it is FileButton }
+        stale.forEach { remove(it) }
 
-    private fun clearFolderButtons() {
-        for (i in 0 until componentCount) {
-            val component = getComponent(i)
-            if (component is FolderButton) {
-                remove(component)
+        val project = ProjectManager.activeProject
+        if (project != null) {
+            for (sourceFolder in project.sourceFolders) {
+                addPackage(sourceFolder, 0)
+            }
+        }
+
+        revalidate()
+        repaint()
+    }
+
+    private fun addPackage(sourcePackage: SourcePackage, level: Int) {
+        val path = sourcePackage.getPath().toString()
+        val folderButton = FolderButton(sourcePackage)
+        folderButton.level = level
+        folderButton.dropped = expandedPaths.contains(path)
+        folderButton.onDroppedChanged = {
+            if (folderButton.dropped) {
+                expandedPaths.add(path)
+            } else {
+                expandedPaths.remove(path)
+            }
+            rebuildTree()
+        }
+        add(folderButton)
+
+        if (folderButton.dropped) {
+            for (child in sourcePackage.sourcePackages) {
+                addPackage(child, level + 1)
+            }
+            for (file in sourcePackage.sourceFiles) {
+                add(FileButton(file, level + 1))
             }
         }
     }
 
     override fun onProjectLoad(project: Project) {
-        clearFolderButtons()
-        for (sourceFolder in project.sourceFolders) {
-            val folderButton = FolderButton(sourceFolder)
-            add(folderButton)
-        }
-
-        repaint()
+        expandedPaths.clear()
+        rebuildTree()
     }
 
     override fun mouseClicked(e: MouseEvent?) {
         if (e == null) return
 
-        for (i in 0 until componentCount) {
-            val component = getComponent(i)
-            if (component is FolderButton) {
-                if (component.contains(e.point)) {
-                    println("Clicked on folder button for ${component.getText()}")
-                    println("Button bounds: ${component.bounds}")
-                } else {
-                    // Print the button's bounds
-                    println("Button bounds: ${component.bounds}")
-                }
-            }
-        }
+        // FolderButton handles its own clicks. This listener only exists so clicks on
+        // empty browser space do not fall through unhandled.
     }
 
     override fun mousePressed(e: MouseEvent?) {
@@ -107,7 +118,6 @@ class ProjectBrowser : JPanel(), ProjectActivityListener, MouseListener {
     }
 
     override fun mouseEntered(e: MouseEvent?) {
-        if (e == null) return
     }
 
     override fun mouseExited(e: MouseEvent?) {

@@ -130,7 +130,7 @@ class EditorCursor(
     }
 
     fun moveTo(position: TextPosition) {
-        val prevPosition = TextPosition(line, column)
+        moveTo(position.line, position.column)
     }
 
     fun moveBy(line: Int, column: Int) {
@@ -168,24 +168,26 @@ class EditorCursor(
     }
 
     fun getSelectedText(): String? {
-        if (selectionStart == null || selectionEnd == null) {
-            return null;
+        val start = selectionStart ?: return null
+        val end = selectionEnd ?: return null
+
+        val from = if (start <= end) start else end
+        val to = if (start <= end) end else start
+        if (from == to) {
+            return null
         }
 
-        if (selectionStart!!.line == selectionEnd!!.line) {
-            return document.getLine(selectionStart!!.line).substring(selectionStart!!.column, selectionEnd!!.column)
-        } else {
-            val from: TextPosition = if (selectionStart!! < selectionEnd!!) selectionStart!! else selectionEnd!!
-            val to: TextPosition = if (selectionStart!! < selectionEnd!!) selectionEnd!! else selectionStart!!
-
-            var text = document.getLine(from.line).substring(from.column, document.getLine(from.line).length())
-            for (i in from.line + 1 until to.line) {
-                text += document.getLine(i)
-                text += "\n"
-            }
-            text += document.getLine(to.line).substring(0, to.column)
-            return text
+        if (from.line == to.line) {
+            return document.getLine(from.line).substring(from.column, to.column)
         }
+
+        var text = document.getLine(from.line).substring(from.column, document.getLine(from.line).length())
+        for (i in from.line + 1 until to.line) {
+            text += document.getLine(i)
+            text += "\n"
+        }
+        text += document.getLine(to.line).substring(0, to.column)
+        return text
     }
 
     fun getSelectionStart(): TextPosition? {
