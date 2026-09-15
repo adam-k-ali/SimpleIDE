@@ -6,10 +6,12 @@ import com.adamkali.simpleide.editor.io.Document
 import com.adamkali.simpleide.editor.io.EditorCursor
 import com.adamkali.simpleide.editor.io.OpenFile
 import com.adamkali.simpleide.editor.io.UnsavedChoice
+import com.adamkali.simpleide.project.ProjectManager
 import com.adamkali.simpleide.testsupport.GuiRender
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.nio.file.Paths
 import javax.swing.JScrollPane
 
 class EditorPanelGuiTest {
@@ -19,11 +21,13 @@ class EditorPanelGuiTest {
         OpenFile.reset()
         OpenFile.showError = { _, _ -> }
         OpenFile.prompt = { UnsavedChoice.DISCARD }
+        ProjectManager.reset()
     }
 
     @Test
     fun expandingFolder_doesNotChangeBrowserOrEditorColumnWidths() {
         val panel = EditorPanel()
+        ProjectManager.load(Paths.get("src/main/resources/testproject/TestProject.proj"))
         panel.setSize(800, 600)
         panel.doLayout()
 

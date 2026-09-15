@@ -12,7 +12,7 @@ There is no Maven wrapper in this repository.
 
 ## Build, test, and run
 
-Run every command from the **repository root**. Theme and sample-project files are loaded as paths relative to the working directory.
+Run every command from the **repository root**. The editor theme is loaded as a path relative to the working directory.
 
 ```bash
 # Tests (same command CI uses)
@@ -41,10 +41,12 @@ Do not use `java -jar target/SimpleIDE-1.0-SNAPSHOT.jar` as a complete launch pa
 4. Wait for the Java language server to import the Maven project.
 5. Run and Debug → **Run SimpleIDE** (F5).
 
-The launch config sets `cwd` to `${workspaceFolder}` and compiles with Maven first. If the working directory is wrong, the editor theme and sample project fail to load.
+The launch config sets `cwd` to `${workspaceFolder}` and compiles with Maven first. If the working directory is wrong, the editor theme fails to load.
 
 ## Features
 
+- Home Screen at startup: **Open Project** (choose a `.proj` file) or **New Project** (name + parent folder)
+- New Project writes `Name/Name.proj` (`projectName` + `sourcePaths: ["src"]`) and an empty `src/` directory, then opens the editor
 - Project tree (left) and code editor (right), with a line/column status bar
 - Typing, Enter, Backspace, Tab (inserted as 4 spaces), arrow keys
 - Click a file in the project tree to open it in the editor
@@ -53,16 +55,16 @@ The launch config sets `cwd` to `${workspaceFolder}` and compiles with Maven fir
 - Ctrl+D to duplicate the current line
 - Java-like syntax highlighting via a custom lexer
 - Current-line highlight from `src/main/resources/preferences/editor-theme.json`
-- Sample project at `src/main/resources/testproject/` (`TestProject.proj`)
+- Sample project at `src/main/resources/testproject/` (`TestProject.proj`); open it from the Home Screen
 
 ## Layout
 
 | Path | Role |
 |------|------|
-| `window/` | Frame, editor panel, status panel |
+| `window/` | Frame, home screen, editor panel, status panel |
 | `editor/` | Code editor, coordinates, input |
 | `editor/io/` | Document, lines, cursor, edit actions, theme loader |
-| `project/` | `.proj` loading and source tree |
+| `project/` | `.proj` load, create/save, and source tree |
 | `project/lang/` | Lexer and token types used for highlighting |
 | `browser/` | Project tree UI |
 | `preferences/` | Editor colors and theme data |
@@ -70,7 +72,7 @@ The launch config sets `cwd` to `${workspaceFolder}` and compiles with Maven fir
 ## Current limitations
 
 - The app does not compile or run the open project.
-- `ProjectManager` can load a `.proj` file; it does not save project metadata.
+- After a project is open, there is no File menu to open or create another one; restart the app to return to the Home Screen.
 
 ## CI
 

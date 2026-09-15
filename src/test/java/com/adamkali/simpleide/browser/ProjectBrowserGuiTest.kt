@@ -7,10 +7,12 @@ import com.adamkali.simpleide.editor.io.Document
 import com.adamkali.simpleide.editor.io.EditorCursor
 import com.adamkali.simpleide.editor.io.OpenFile
 import com.adamkali.simpleide.editor.io.UnsavedChoice
+import com.adamkali.simpleide.project.ProjectManager
 import com.adamkali.simpleide.testsupport.GuiRender
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.nio.file.Paths
 import javax.swing.JLabel
 
 class ProjectBrowserGuiTest {
@@ -20,11 +22,13 @@ class ProjectBrowserGuiTest {
         OpenFile.reset()
         OpenFile.showError = { _, _ -> }
         OpenFile.prompt = { UnsavedChoice.DISCARD }
+        ProjectManager.reset()
     }
 
     @Test
     fun expandingFolder_revealsNestedPackagesAndFiles() {
         val browser = ProjectBrowser()
+        ProjectManager.load(SAMPLE_PROJECT)
         browser.setSize(240, 400)
         browser.doLayout()
 
@@ -46,6 +50,7 @@ class ProjectBrowserGuiTest {
     @Test
     fun clickingFile_loadsContentsIntoTheEditor() {
         val browser = ProjectBrowser()
+        ProjectManager.load(SAMPLE_PROJECT)
         browser.setSize(240, 400)
         browser.doLayout()
 
@@ -61,5 +66,9 @@ class ProjectBrowserGuiTest {
         assertTrue(text.contains("package test;"), "opened file should contain package test;, was: $text")
         assertTrue(text.contains("Hello World!"), "opened file should contain Hello World!, was: $text")
         assertTrue(OpenFile.path.toString().endsWith("Main.java"))
+    }
+
+    companion object {
+        private val SAMPLE_PROJECT = Paths.get("src/main/resources/testproject/TestProject.proj")
     }
 }

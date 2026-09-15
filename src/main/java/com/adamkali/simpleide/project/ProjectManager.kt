@@ -3,8 +3,11 @@ package com.adamkali.simpleide.project
 import com.adamkali.simpleide.activity.ProjectActivityListener
 import com.adamkali.simpleide.window.AppWindow
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.google.gson.stream.JsonReader
 import java.io.File
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -21,7 +24,7 @@ object ProjectManager {
         }
 
     /** The GSON instance used to serialize and deserialize projects */
-    private var gson = Gson()
+    private var gson: Gson = GsonBuilder().setPrettyPrinting().create()
 
     /** The callbacks for project activity */
     private var callbacks = mutableListOf<ProjectActivityListener>();
@@ -36,6 +39,14 @@ object ProjectManager {
         if (callbacks.contains(listener)) {
             callbacks.remove(listener);
         }
+    }
+
+    /**
+     * Clears the active project and listeners. Intended for tests.
+     */
+    fun reset() {
+        callbacks.clear()
+        activeProject = null
     }
 
     /**
@@ -72,8 +83,9 @@ object ProjectManager {
      * @param projectPath The path to the project file
      */
     fun load(projectPath: Path) {
-        val reader = JsonReader(File(projectPath.toString()).reader())
-        val projectFile: ProjectFile = gson.fromJson(reader, ProjectFile::class.java)
+        val projectFile: ProjectFile = File(projectPath.toString()).reader().use { reader ->
+            gson.fromJson(JsonReader(reader), ProjectFile::class.java)
+        }
         projectFile.rootPath = projectPath.parent.toString()
 
         val project = Project(projectFile)
@@ -88,4 +100,58 @@ object ProjectManager {
             callback.onProjectLoad(project)
         }
     }
+
+    /**
+     * Writes [projectFile] to [dest] as JSON with only `projectName` and `sourcePaths`.
+     */
+    fun save(projectFile: ProjectFile, dest: Path) {
+        val persisted = PersistedProjectFile(projectFile.projectName, projectFile.sourcePaths)
+        Files.writeString(dest, gson.toJson(persisted), StandardCharsets.UTF_8)
+    }
+
+    /**
+     * Creates a new project folder under [parentDir], writes a `.proj` file and an empty `src/`
+     * directory, then loads it.
+     * @return the path to the new `.proj` file
+     */
+    fun create(parentDir: Path, projectName: String): Path {
+        val name = projectName.trim()
+        validateProjectName(name)
+        if (!Files.isDirectory(parentDir)) {
+            throw IllegalArgumentException("Parent directory does not exist")
+        }
+
+        val projectDir = parentDir.resolve(name)
+        if (Files.exists(projectDir)) {
+            throw IllegalArgumentException("A folder already exists with that name")
+        }
+
+        Files.createDirectories(projectDir.resolve("src"))
+        val dest = projectDir.resolve("$name.proj")
+        val projectFile = ProjectFile(
+            rootPath = projectDir.toString(),
+            projectName = name,
+            sourcePaths = arrayOf("src")
+        )
+        save(projectFile, dest)
+        load(dest)
+        return dest
+    }
+
+    private fun validateProjectName(name: String) {
+        if (name.isEmpty()) {
+            throw IllegalArgumentException("Project name cannot be blank")
+        }
+        if (name == "." || name == "..") {
+            throw IllegalArgumentException("Project name is invalid")
+        }
+        if (name.contains('/') || name.contains('\\')) {
+            throw IllegalArgumentException("Project name cannot contain path separators")
+        }
+    }
+
+    private class PersistedProjectFile(
+        val projectName: String,
+        val sourcePaths: Array<String>
+    )
 }

@@ -33,12 +33,19 @@ object AppWindow {
         loadTheme()
 
         frame = JFrame("SimpleIDE")
-        editorPanel = EditorPanel()
-        statusPanel = StatusPanel()
-
         frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
         frame.setSize(800, 600)
         frame.setLocationRelativeTo(null)
+
+        val homeScreen = HomeScreen()
+        homeScreen.onProjectReady = { showEditor() }
+        frame.add(homeScreen)
+        frame.isVisible = true
+    }
+
+    private fun showEditor() {
+        editorPanel = EditorPanel()
+        statusPanel = StatusPanel()
 
         val container = JPanel()
         container.layout = BoxLayout(container, BoxLayout.Y_AXIS)
@@ -48,10 +55,13 @@ object AppWindow {
         container.add(editorPanel)
         container.add(statusPanel)
 
-        frame.add(container)
-        frame.isVisible = true
+        frame.contentPane.removeAll()
+        frame.contentPane.add(container)
+        frame.revalidate()
+        frame.repaint()
         editorPanel.codeEditor.requestFocusInWindow()
 
+        editorTimer?.stop()
         editorTimer = Timer(1000 / 60) {
             editorPanel.codeEditor.update()
         }
