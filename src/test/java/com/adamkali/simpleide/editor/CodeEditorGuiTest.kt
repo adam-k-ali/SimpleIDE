@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.awt.Color
+import java.awt.Dimension
 import java.awt.Point
 import java.awt.event.InputEvent
 import java.awt.event.KeyEvent
@@ -317,20 +318,35 @@ class CodeEditorGuiTest {
 
     @Test
     fun arrowDown_atBottomEdge_scrollsViewport() {
-        Global.getCursor().getDocument().replaceText((0 until 40).joinToString("\n") { "x" })
+        Global.getCursor().getDocument().replaceText((0 until 80).joinToString("\n") { "x" })
 
-        val (editor, scroll) = editorInScrollPane(400, 150)
-        val lastVisible = lastFullyVisibleLine(scroll)
+        val (editor, scroll) = editorInScrollPane(400, 120)
+        val lineHeight = Global.getLineHeight()
+        val extentH = scroll.viewport.extentSize.height
+        assertTrue(extentH > lineHeight, "viewport should show at least one line")
         assertTrue(
-            lastVisible + 1 < Global.getCursor().getDocument().getLineCount(),
-            "need at least one line below the viewport to pan"
+            scroll.viewport.viewSize.height > extentH,
+            "document should be taller than the viewport"
         )
-        Global.getCursor().moveTo(lastVisible, 0)
-        val yBefore = scroll.viewport.viewPosition.y
 
+        val edgeLine = 12
+        val edgeBottom = EditorCoordinates.lineTop(edgeLine, lineHeight) + lineHeight
+        val viewY = edgeBottom - extentH
+        assertTrue(viewY > 0, "edge line should sit at the bottom of a scrolled viewport")
+        Global.getCursor().moveTo(edgeLine, 0)
+        scroll.viewport.viewPosition = Point(0, viewY)
+
+        val visible = scroll.viewport.viewRect
+        val nextBottom = EditorCoordinates.lineTop(edgeLine + 1, lineHeight) + lineHeight
+        assertTrue(
+            nextBottom > visible.y + visible.height,
+            "the next line must extend past the visible area before pressing down"
+        )
+
+        val yBefore = scroll.viewport.viewPosition.y
         editor.press(KeyEvent.VK_DOWN)
 
-        assertEquals(lastVisible + 1, Global.getCursor().getLine())
+        assertEquals(edgeLine + 1, Global.getCursor().getLine())
         assertTrue(
             scroll.viewport.viewPosition.y > yBefore,
             "viewport should pan down when the caret leaves the visible area"
@@ -385,26 +401,17 @@ class CodeEditorGuiTest {
         scroll.setSize(width, height)
         scroll.doLayout()
         editor.update()
-        editor.size = editor.preferredSize
-        scroll.viewport.viewSize = editor.preferredSize
+        val viewSize = editor.preferredSize
+        editor.size = viewSize
+        scroll.viewport.viewSize = viewSize
         scroll.doLayout()
+        scroll.viewport.viewSize = viewSize
+        scroll.viewport.extentSize = Dimension(
+            (width - 32).coerceAtLeast(80),
+            (height - 32).coerceAtLeast(48)
+        )
         scroll.viewport.viewPosition = Point(0, 0)
         return editor to scroll
-    }
-
-    private fun lastFullyVisibleLine(scroll: JScrollPane): Int {
-        val visible = scroll.viewport.viewRect
-        val lineHeight = Global.getLineHeight()
-        val lineCount = Global.getCursor().getDocument().getLineCount()
-        var last = 0
-        for (line in 0 until lineCount) {
-            val top = EditorCoordinates.lineTop(line, lineHeight)
-            val bottom = top + lineHeight
-            if (top >= visible.y && bottom <= visible.y + visible.height) {
-                last = line
-            }
-        }
-        return last
     }
 
     private fun lastFullyVisibleColumn(scroll: JScrollPane): Int {
