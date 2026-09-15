@@ -168,26 +168,70 @@ class EditorCursor(
     }
 
     fun getSelectedText(): String? {
-        val start = selectionStart ?: return null
-        val end = selectionEnd ?: return null
-
-        val from = if (start <= end) start else end
-        val to = if (start <= end) end else start
-        if (from == to) {
-            return null
-        }
+        val range = orderedSelection() ?: return null
+        val from = range.first
+        val to = range.second
 
         if (from.line == to.line) {
             return document.getLine(from.line).substring(from.column, to.column)
         }
 
-        var text = document.getLine(from.line).substring(from.column, document.getLine(from.line).length())
+        val text = StringBuilder()
+        text.append(document.getLine(from.line).substring(from.column, document.getLine(from.line).length()))
         for (i in from.line + 1 until to.line) {
-            text += document.getLine(i)
-            text += "\n"
+            text.append('\n')
+            text.append(document.getLine(i).toString())
         }
-        text += document.getLine(to.line).substring(0, to.column)
-        return text
+        text.append('\n')
+        text.append(document.getLine(to.line).substring(0, to.column))
+        return text.toString()
+    }
+
+    /**
+     * Deletes the current selection and moves the cursor to the start of the range.
+     * @return true if a non-empty selection was deleted.
+     */
+    fun deleteSelection(): Boolean {
+        val range = orderedSelection() ?: return false
+        val from = range.first
+        val to = range.second
+
+        val prefix = document.getLine(from.line).substring(0, from.column)
+        val suffix = document.getLine(to.line).substring(to.column, document.getLine(to.line).length())
+        document.getLine(from.line).rewrite(prefix + suffix)
+        if (from.line != to.line) {
+            for (i in to.line downTo from.line + 1) {
+                document.removeLine(i)
+            }
+        }
+
+        clearSelection()
+        moveTo(from.line, from.column)
+        return true
+    }
+
+    /**
+     * Inserts [text] at the cursor, splitting on newlines. The cursor is left at the
+     * end of the inserted text. CR/CRLF are normalized to LF.
+     */
+    fun insertText(text: String) {
+        val normalized = text.replace("\r\n", "\n").replace("\r", "\n")
+        val parts = normalized.split("\n")
+        val before = getTextBeforeCursor()
+        val after = getTextAfterCursor()
+        val startLine = line
+
+        document.getLine(startLine).rewrite(before + parts[0] + if (parts.size == 1) after else "")
+        for (i in 1 until parts.size) {
+            val newLine = Line()
+            val content = if (i == parts.size - 1) parts[i] + after else parts[i]
+            newLine.rewrite(content)
+            document.insertLine(startLine + i, newLine)
+        }
+
+        val endLine = startLine + parts.size - 1
+        val endColumn = if (parts.size == 1) before.length + parts[0].length else parts.last().length
+        moveTo(endLine, endColumn)
     }
 
     fun getSelectionStart(): TextPosition? {
@@ -196,6 +240,17 @@ class EditorCursor(
 
     fun getSelectionEnd(): TextPosition? {
         return selectionEnd
+    }
+
+    private fun orderedSelection(): Pair<TextPosition, TextPosition>? {
+        val start = selectionStart ?: return null
+        val end = selectionEnd ?: return null
+        val from = if (start <= end) start else end
+        val to = if (start <= end) end else start
+        if (from == to) {
+            return null
+        }
+        return Pair(from, to)
     }
 
 }
