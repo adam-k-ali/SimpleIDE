@@ -11,8 +11,9 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.release>17</maven.compiler.release>
-        <kotlin.version>1.9.22</kotlin.version>
+        <maven.compiler.release>21</maven.compiler.release>
+        <kotlin.version>2.4.20</kotlin.version>
+        <kotlin.compiler.jvmTarget>21</kotlin.compiler.jvmTarget>
     </properties>
 
     <dependencies>
@@ -33,7 +34,7 @@
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib-jdk8</artifactId>
+            <artifactId>kotlin-stdlib</artifactId>
             <version>${kotlin.version}</version>
         </dependency>
         <dependency>
@@ -97,12 +98,6 @@
                         <goals>
                             <goal>compile</goal>
                         </goals>
-                        <configuration>
-                            <sourceDirs>
-                                <source>src/main/java</source>
-                                <source>target/generated-sources/annotations</source>
-                            </sourceDirs>
-                        </configuration>
                     </execution>
                     <execution>
                         <id>test-compile</id>
@@ -110,16 +105,10 @@
                         <goals>
                             <goal>test-compile</goal>
                         </goals>
-                        <configuration>
-                            <sourceDirs>
-                                <source>src/test/java</source>
-                                <source>src/test/kotlin</source>
-                            </sourceDirs>
-                        </configuration>
                     </execution>
                 </executions>
                 <configuration>
-                    <jvmTarget>1.8</jvmTarget>
+                    <jvmTarget>${kotlin.compiler.jvmTarget}</jvmTarget>
                 </configuration>
             </plugin>
             <plugin>
@@ -137,7 +126,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
                 <configuration>
-                    <release>17</release>
+                    <release>${maven.compiler.release}</release>
                 </configuration>
                 <executions>
                     <execution>
