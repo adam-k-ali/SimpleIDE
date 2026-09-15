@@ -5,14 +5,16 @@ import com.adamkali.simpleide.activity.ProjectActivityListener
 import com.adamkali.simpleide.browser.components.FileButton
 import com.adamkali.simpleide.browser.components.FolderButton
 import com.adamkali.simpleide.editor.io.OpenFile
+import com.adamkali.simpleide.preferences.EditorColors
 import com.adamkali.simpleide.project.Project
 import com.adamkali.simpleide.project.ProjectManager
 import com.adamkali.simpleide.project.SourcePackage
-import java.awt.Color
 import java.awt.Component
+import java.awt.Font
 import java.awt.Graphics
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
+import javax.swing.BorderFactory
 import javax.swing.BoxLayout
 import javax.swing.JLabel
 import javax.swing.JPanel
@@ -28,11 +30,17 @@ class ProjectBrowser : JPanel(), ProjectActivityListener, MouseListener {
         addMouseListener(this)
 
         font = Global.getFont()
-        background = Color.WHITE
+        background = EditorColors.sidebarBackground()
         isOpaque = true
+        border = BorderFactory.createEmptyBorder(8, 8, 8, 4)
 
         layout = BoxLayout(this, BoxLayout.Y_AXIS)
-        val title = JLabel("Project Browser")
+        val title = JLabel("EXPLORER")
+        title.font = Global.getFont().deriveFont(Font.BOLD, 11f)
+        title.foreground = EditorColors.gutterForeground()
+        title.background = EditorColors.sidebarBackground()
+        title.isOpaque = true
+        title.border = BorderFactory.createEmptyBorder(0, 4, 8, 0)
         title.alignmentX = Component.LEFT_ALIGNMENT
         add(title)
 
@@ -52,11 +60,8 @@ class ProjectBrowser : JPanel(), ProjectActivityListener, MouseListener {
 
         if (g == null) return
 
-        g.color = background
+        g.color = EditorColors.sidebarBackground()
         g.fillRect(0, 0, width, height)
-
-        g.color = Color.GRAY
-        g.drawRect(0, 0, width - 1, height - 1)
     }
 
     private fun rebuildTree() {
@@ -99,6 +104,7 @@ class ProjectBrowser : JPanel(), ProjectActivityListener, MouseListener {
                     if (OpenFile.open(sourceFile.getPath())) {
                         onFileOpened?.invoke()
                     }
+                    rebuildTree()
                 }
                 add(fileButton)
             }

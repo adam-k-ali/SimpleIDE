@@ -70,6 +70,22 @@ object GuiRender {
         return false
     }
 
+    fun hasLightGlyph(image: BufferedImage, x0: Int, y0: Int, x1: Int, y1: Int): Boolean {
+        val minX = x0.coerceIn(0, image.width - 1)
+        val minY = y0.coerceIn(0, image.height - 1)
+        val maxX = x1.coerceIn(0, image.width - 1)
+        val maxY = y1.coerceIn(0, image.height - 1)
+        for (x in minX..maxX) {
+            for (y in minY..maxY) {
+                val color = rgb(image, x, y)
+                if (color.alpha > 200 && color.red > 180 && color.green > 180 && color.blue > 180) {
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
     fun hasColor(image: BufferedImage, target: Color, tolerance: Int = 5): Boolean {
         for (x in 0 until image.width) {
             for (y in 0 until image.height) {

@@ -1,8 +1,8 @@
 package com.adamkali.simpleide.window
 
 import com.adamkali.simpleide.Global
+import com.adamkali.simpleide.preferences.EditorColors
 import com.adamkali.simpleide.project.ProjectManager
-import java.awt.Color
 import java.awt.Component
 import java.awt.Dimension
 import java.awt.Font
@@ -38,11 +38,11 @@ class HomeScreen : JPanel() {
 
     init {
         layout = GridBagLayout()
-        background = Color.WHITE
+        background = EditorColors.editorBackground()
         isOpaque = true
 
         titleLabel.font = Global.getFont().deriveFont(Font.BOLD, 28f)
-        titleLabel.foreground = Color.BLACK
+        titleLabel.foreground = EditorColors.editorForeground()
         titleLabel.alignmentX = Component.CENTER_ALIGNMENT
 
         openButton.alignmentX = Component.CENTER_ALIGNMENT
