@@ -226,7 +226,16 @@ public class CodeEditor extends JPanel implements Scrollable {
         return false;
     }
 
-    private static class KeyboardHandler implements KeyListener {
+    /**
+     * Pans the parent viewport only when the caret would leave the visible area.
+     */
+    private void ensureCursorVisible() {
+        int x = EditorCoordinates.cursorX(Global.getCursor().getTextBeforeCursor(), Global::getStringWidth);
+        int y = EditorCoordinates.lineTop(Global.getCursor().getLine(), Global.getLineHeight());
+        scrollRectToVisible(new Rectangle(x, y, 1, Global.getLineHeight()));
+    }
+
+    private class KeyboardHandler implements KeyListener {
         // Keeps track of which keys are pressed. A BitSet grows past 256 so
         // extended key codes cannot throw ArrayIndexOutOfBoundsException.
         private final BitSet keys = new BitSet();
@@ -292,18 +301,26 @@ public class CodeEditor extends JPanel implements Scrollable {
                 case KeyEvent.VK_LEFT:
                     Global.getCursor().clearSelection();
                     Global.getCursor().moveLeft();
+                    ensureCursorVisible();
+                    e.consume();
                     break;
                 case KeyEvent.VK_RIGHT:
                     Global.getCursor().clearSelection();
                     Global.getCursor().moveRight();
+                    ensureCursorVisible();
+                    e.consume();
                     break;
                 case KeyEvent.VK_UP:
                     Global.getCursor().clearSelection();
                     Global.getCursor().moveUp();
+                    ensureCursorVisible();
+                    e.consume();
                     break;
                 case KeyEvent.VK_DOWN:
                     Global.getCursor().clearSelection();
                     Global.getCursor().moveDown();
+                    ensureCursorVisible();
+                    e.consume();
                     break;
 
                 case KeyEvent.VK_D:

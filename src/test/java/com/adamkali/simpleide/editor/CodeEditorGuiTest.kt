@@ -17,10 +17,13 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.awt.Color
+import java.awt.Dimension
+import java.awt.Point
 import java.awt.event.InputEvent
 import java.awt.event.KeyEvent
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
+import javax.swing.JScrollPane
 
 class CodeEditorGuiTest {
     @BeforeEach
@@ -295,6 +298,134 @@ class CodeEditorGuiTest {
 
         assertEquals("aXYbc", Global.getCursor().getDocument().getLine(0).toString())
         assertEquals(3, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun arrowKeys_insideViewport_doNotScrollThePane() {
+        Global.getCursor().getDocument().replaceText((0 until 40).joinToString("\n") { "abcdefghij" })
+        Global.getCursor().moveTo(1, 0)
+
+        val (editor, scroll) = editorInScrollPane(400, 150)
+        val before = Point(scroll.viewport.viewPosition)
+
+        editor.press(KeyEvent.VK_DOWN)
+        editor.press(KeyEvent.VK_RIGHT)
+
+        assertEquals(2, Global.getCursor().getLine())
+        assertEquals(1, Global.getCursor().getColumn())
+        assertEquals(before, scroll.viewport.viewPosition)
+    }
+
+    @Test
+    fun arrowDown_atBottomEdge_scrollsViewport() {
+        Global.getCursor().getDocument().replaceText((0 until 80).joinToString("\n") { "x" })
+
+        val (editor, scroll) = editorInScrollPane(400, 120)
+        val lineHeight = Global.getLineHeight()
+        val extentH = scroll.viewport.extentSize.height
+        assertTrue(extentH > lineHeight, "viewport should show at least one line")
+        assertTrue(
+            scroll.viewport.viewSize.height > extentH,
+            "document should be taller than the viewport"
+        )
+
+        val edgeLine = 12
+        val edgeBottom = EditorCoordinates.lineTop(edgeLine, lineHeight) + lineHeight
+        val viewY = edgeBottom - extentH
+        assertTrue(viewY > 0, "edge line should sit at the bottom of a scrolled viewport")
+        Global.getCursor().moveTo(edgeLine, 0)
+        scroll.viewport.viewPosition = Point(0, viewY)
+
+        val visible = scroll.viewport.viewRect
+        val nextBottom = EditorCoordinates.lineTop(edgeLine + 1, lineHeight) + lineHeight
+        assertTrue(
+            nextBottom > visible.y + visible.height,
+            "the next line must extend past the visible area before pressing down"
+        )
+
+        val yBefore = scroll.viewport.viewPosition.y
+        editor.press(KeyEvent.VK_DOWN)
+
+        assertEquals(edgeLine + 1, Global.getCursor().getLine())
+        assertTrue(
+            scroll.viewport.viewPosition.y > yBefore,
+            "viewport should pan down when the caret leaves the visible area"
+        )
+    }
+
+    @Test
+    fun arrowRight_atRightEdge_scrollsViewport() {
+        Global.getCursor().getDocument().replaceText("a".repeat(200))
+        Global.getCursor().moveTo(0, 0)
+
+        val (editor, scroll) = editorInScrollPane(280, 120)
+        val lastVisible = lastFullyVisibleColumn(scroll)
+        val lineLength = Global.getCursor().getDocument().getLine(0).length()
+        assertTrue(lastVisible < lineLength, "need characters past the right edge to pan")
+        Global.getCursor().moveTo(0, lastVisible)
+        val xBefore = scroll.viewport.viewPosition.x
+
+        editor.press(KeyEvent.VK_RIGHT)
+
+        assertEquals(lastVisible + 1, Global.getCursor().getColumn())
+        assertTrue(
+            scroll.viewport.viewPosition.x > xBefore,
+            "viewport should pan right when the caret leaves the visible area"
+        )
+    }
+
+    /**
+     * Exposes [processKeyEvent] so tests can exercise consume vs JScrollPane
+     * ancestor bindings without a focused, showing window (headless CI).
+     */
+    private class TestEditor : CodeEditor() {
+        fun press(keyCode: Int) {
+            processKeyEvent(
+                KeyEvent(
+                    this,
+                    KeyEvent.KEY_PRESSED,
+                    System.currentTimeMillis(),
+                    0,
+                    keyCode,
+                    KeyEvent.CHAR_UNDEFINED
+                )
+            )
+        }
+    }
+
+    private fun editorInScrollPane(width: Int, height: Int): Pair<TestEditor, JScrollPane> {
+        val editor = TestEditor()
+        val scroll = JScrollPane(editor)
+        scroll.verticalScrollBarPolicy = JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
+        scroll.horizontalScrollBarPolicy = JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS
+        scroll.setSize(width, height)
+        scroll.doLayout()
+        editor.update()
+        val viewSize = editor.preferredSize
+        editor.size = viewSize
+        scroll.viewport.viewSize = viewSize
+        scroll.doLayout()
+        scroll.viewport.viewSize = viewSize
+        scroll.viewport.extentSize = Dimension(
+            (width - 32).coerceAtLeast(80),
+            (height - 32).coerceAtLeast(48)
+        )
+        scroll.viewport.viewPosition = Point(0, 0)
+        return editor to scroll
+    }
+
+    private fun lastFullyVisibleColumn(scroll: JScrollPane): Int {
+        val visible = scroll.viewport.viewRect
+        val line = Global.getCursor().getLine()
+        val text = Global.getCursor().getDocument().getLine(line).toString()
+        var last = 0
+        for (col in 0..text.length) {
+            val x = EditorCoordinates.cursorX(text.substring(0, col), Global::getStringWidth)
+            if (x >= visible.x && x + 1 <= visible.x + visible.width) {
+                last = col
+            }
+        }
+        return last
     }
 
     private fun dispatchShortcut(editor: CodeEditor, keyCode: Int, modifiers: Int) {
