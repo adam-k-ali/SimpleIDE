@@ -267,6 +267,9 @@ public class CodeEditor extends JPanel implements Scrollable {
                 case KeyEvent.VK_BACK_SPACE:
                     ActionsList.BACKSPACE.execute();
                     break;
+                case KeyEvent.VK_DELETE:
+                    ActionsList.DELETE.execute();
+                    break;
                 case KeyEvent.VK_TAB:
                     for (int i = 0; i < TAB_WIDTH; i++) {
                         ActionsList.TYPE_CHARACTER.execute(' ');
