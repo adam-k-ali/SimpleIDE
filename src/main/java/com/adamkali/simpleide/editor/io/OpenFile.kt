@@ -27,6 +27,8 @@ object OpenFile {
 
     var showError: (title: String, message: String) -> Unit = ::swingError
 
+    var onStateChanged: (() -> Unit)? = null
+
     fun isDirty(): Boolean {
         if (path == null) {
             return false
@@ -39,6 +41,8 @@ object OpenFile {
         snapshot = ""
         prompt = ::swingPrompt
         showError = ::swingError
+        onStateChanged = null
+        notifyStateChanged()
     }
 
     /**
@@ -127,6 +131,11 @@ object OpenFile {
             else -> "SimpleIDE"
         }
         AppWindow.setTitle(title)
+        notifyStateChanged()
+    }
+
+    private fun notifyStateChanged() {
+        onStateChanged?.invoke()
     }
 
     private fun swingPrompt(fileName: String): UnsavedChoice {

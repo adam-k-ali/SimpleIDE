@@ -8,15 +8,14 @@ import com.adamkali.simpleide.editor.io.OpenFile
 import com.adamkali.simpleide.editor.io.UnsavedChoice
 import com.adamkali.simpleide.editor.io.action.ActionsList
 import com.adamkali.simpleide.editor.io.theme.ThemeLoader
+import com.adamkali.simpleide.preferences.EditorColors
 import com.adamkali.simpleide.preferences.ThemeData
 import com.adamkali.simpleide.testsupport.GuiRender
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.awt.Color
 import java.awt.Dimension
 import java.awt.Point
 import java.awt.event.InputEvent
@@ -48,13 +47,13 @@ class CodeEditorGuiTest {
         val gutter = GuiRender.rgb(image, 4, sampleY)
 
         assertTrue(
-            GuiRender.isNear(gutter, Color.LIGHT_GRAY, 2),
-            "gutter pixel should stay LIGHT_GRAY, but was $gutter"
+            GuiRender.isNear(gutter, EditorColors.gutterBackground(), 8),
+            "gutter pixel should stay the gutter color, but was $gutter"
         )
     }
 
     @Test
-    fun currentLineHighlight_isVisibleBesideText_andTextStaysDark() {
+    fun currentLineHighlight_isVisibleBesideText_andTextStaysLight() {
         "Hello".forEach { ActionsList.TYPE_CHARACTER.execute(it) }
         ActionsList.NEW_LINE.execute()
         "World".forEach { ActionsList.TYPE_CHARACTER.execute(it) }
@@ -66,20 +65,19 @@ class CodeEditorGuiTest {
         val textX = EditorCoordinates.LINE_NUM_WIDTH + EditorCoordinates.MARGIN_LEFT
 
         assertTrue(
-            GuiRender.hasDarkGlyph(image, textX, EditorCoordinates.MARGIN_TOP, textX + 80, EditorCoordinates.MARGIN_TOP + lineHeight),
-            "text on the current line should still paint as dark glyphs"
+            GuiRender.hasLightGlyph(image, textX, EditorCoordinates.MARGIN_TOP, textX + 80, EditorCoordinates.MARGIN_TOP + lineHeight),
+            "text on the current line should paint as light glyphs"
         )
 
         val highlightSample = GuiRender.rgb(image, textX + 120, EditorCoordinates.lineTop(0, lineHeight) + lineHeight / 2)
         val otherLineSample = GuiRender.rgb(image, textX + 120, EditorCoordinates.lineTop(1, lineHeight) + lineHeight + 8)
-        assertNotEquals(
-            Color.WHITE.rgb or 0xFF000000.toInt(),
-            highlightSample.rgb,
-            "empty space on the current line should be tinted by the line highlight"
+        assertTrue(
+            GuiRender.isNear(highlightSample, EditorColors.currentLineHighlight(), 12),
+            "empty space on the current line should be tinted by the line highlight, but was $highlightSample"
         )
         assertTrue(
-            otherLineSample.red > 240 && otherLineSample.green > 240 && otherLineSample.blue > 240,
-            "empty space on a non-current line should remain near white, but was $otherLineSample"
+            GuiRender.isNear(otherLineSample, EditorColors.editorBackground(), 12),
+            "empty space on a non-current line should remain the editor background, but was $otherLineSample"
         )
     }
 

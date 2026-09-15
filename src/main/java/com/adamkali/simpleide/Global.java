@@ -54,6 +54,7 @@ public class Global {
 
     public static void setTheme(ThemeData theme) {
         Global.theme = theme;
+        com.adamkali.simpleide.preferences.EditorColors.apply(theme);
     }
 
     public static ThemeData getTheme() {

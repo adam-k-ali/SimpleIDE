@@ -9,10 +9,11 @@ import com.adamkali.simpleide.editor.io.UnsavedChoice
 import com.adamkali.simpleide.project.ProjectManager
 import com.adamkali.simpleide.testsupport.GuiRender
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.nio.file.Paths
-import javax.swing.JScrollPane
 
 class EditorPanelGuiTest {
     @BeforeEach
@@ -31,10 +32,9 @@ class EditorPanelGuiTest {
         panel.setSize(800, 600)
         panel.doLayout()
 
-        val browserColumn = panel.components[0]
-        val editorColumn = panel.components[1] as JScrollPane
-        val browserWidthBefore = browserColumn.width
-        val editorWidthBefore = editorColumn.width
+        val split = panel.splitPane
+        val browserWidthBefore = split.leftComponent.width
+        val editorWidthBefore = split.rightComponent.width
 
         val root = panel.projectBrowser.components.filterIsInstance<FolderButton>().single { it.getText() == "src" }
         GuiRender.click(root)
@@ -42,13 +42,50 @@ class EditorPanelGuiTest {
 
         assertEquals(
             browserWidthBefore,
-            browserColumn.width,
+            split.leftComponent.width,
             "project browser column should not grow when a folder is expanded"
         )
         assertEquals(
             editorWidthBefore,
-            editorColumn.width,
+            split.rightComponent.width,
             "editor column should not shrink when a folder is expanded"
         )
+    }
+
+    @Test
+    fun activityBar_togglesSidebarVisibility() {
+        val panel = EditorPanel()
+        ProjectManager.load(Paths.get("src/main/resources/testproject/TestProject.proj"))
+        panel.setSize(800, 600)
+        panel.doLayout()
+
+        assertTrue(panel.sidebarVisible)
+        assertTrue(panel.activityBar.explorerSelected)
+        assertTrue(panel.splitPane.leftComponent.isVisible)
+
+        GuiRender.click(panel.activityBar, 24, 24)
+        panel.doLayout()
+
+        assertFalse(panel.sidebarVisible)
+        assertFalse(panel.activityBar.explorerSelected)
+        assertFalse(panel.splitPane.leftComponent.isVisible)
+
+        GuiRender.click(panel.activityBar, 24, 24)
+        panel.doLayout()
+
+        assertTrue(panel.sidebarVisible)
+        assertTrue(panel.activityBar.explorerSelected)
+        assertTrue(panel.splitPane.leftComponent.isVisible)
+    }
+
+    @Test
+    fun tabBar_showsOpenedFileName() {
+        val panel = EditorPanel()
+        ProjectManager.load(Paths.get("src/main/resources/testproject/TestProject.proj"))
+        assertEquals("Untitled", panel.editorTabBar.displayedTitle())
+
+        assertTrue(OpenFile.open(Paths.get("src/main/resources/testproject/src/test/Main.java")))
+        panel.editorTabBar.refresh()
+        assertEquals("Main.java", panel.editorTabBar.displayedTitle())
     }
 }
