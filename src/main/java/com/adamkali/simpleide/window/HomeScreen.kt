@@ -42,6 +42,7 @@ class HomeScreen : JPanel() {
         isOpaque = true
 
         titleLabel.font = Global.getFont().deriveFont(Font.BOLD, 28f)
+        titleLabel.foreground = Color.BLACK
         titleLabel.alignmentX = Component.CENTER_ALIGNMENT
 
         openButton.alignmentX = Component.CENTER_ALIGNMENT

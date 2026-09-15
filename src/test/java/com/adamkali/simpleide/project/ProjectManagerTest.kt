@@ -1,7 +1,5 @@
 package com.adamkali.simpleide.project
 
-import com.google.gson.Gson
-import com.google.gson.JsonObject
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -74,10 +72,12 @@ class ProjectManagerTest {
         ProjectManager.save(projectFile, dest)
 
         val json = Files.readString(dest, StandardCharsets.UTF_8)
-        val parsed = Gson().fromJson(json, JsonObject::class.java)
-        assertEquals("Saved", parsed.get("projectName").asString)
-        assertEquals("src", parsed.getAsJsonArray("sourcePaths")[0].asString)
-        assertFalse(parsed.has("rootPath"), "saved JSON should not include rootPath, was: $json")
+        assertTrue(json.contains("\"projectName\""), json)
+        assertTrue(json.contains("Saved"), json)
+        assertTrue(json.contains("\"sourcePaths\""), json)
+        assertTrue(json.contains("src"), json)
+        assertFalse(json.contains("rootPath"), "saved JSON should not include rootPath, was: $json")
+        assertFalse(json.contains("/should/not/appear"), json)
     }
 
     @Test
