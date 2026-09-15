@@ -207,6 +207,26 @@ class CodeEditorGuiTest {
         assertEquals("original", Global.getCursor().getDocument().toText())
     }
 
+    @Test
+    fun deleteKey_removesCharacterAfterCursor() {
+        "abc".forEach { ActionsList.TYPE_CHARACTER.execute(it) }
+        Global.getCursor().moveTo(0, 1)
+
+        val editor = CodeEditor()
+        val event = KeyEvent(
+            editor,
+            KeyEvent.KEY_TYPED,
+            System.currentTimeMillis(),
+            0,
+            KeyEvent.VK_UNDEFINED,
+            KeyEvent.VK_DELETE.toChar()
+        )
+        editor.keyListeners.forEach { it.keyTyped(event) }
+
+        assertEquals("ac", Global.getCursor().getDocument().getLine(0).toString())
+        assertEquals(1, Global.getCursor().getColumn())
+    }
+
     private fun dispatchShortcut(editor: CodeEditor, keyCode: Int, modifiers: Int) {
         val event = KeyEvent(
             editor,
