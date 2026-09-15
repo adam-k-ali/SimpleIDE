@@ -26,7 +26,13 @@ class EditorPanel : JPanel() {
         constraints.gridx = 0
         constraints.gridy = 0
 
-        add(projectBrowser, constraints)
+        val browserScroll = JScrollPane(projectBrowser)
+        browserScroll.verticalScrollBarPolicy = JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
+        browserScroll.horizontalScrollBarPolicy = JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
+        browserScroll.preferredSize = Dimension(200, 1)
+        browserScroll.minimumSize = Dimension(120, 1)
+
+        add(browserScroll, constraints)
         projectBrowser.onFileOpened = { codeEditor.requestFocusInWindow() }
 
         // Code Editor

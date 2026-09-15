@@ -41,6 +41,7 @@ public class FileButton extends JComponent {
         setOpaque(true);
         setBackground(Color.WHITE);
         setForeground(Color.BLACK);
+        setAlignmentX(LEFT_ALIGNMENT);
     }
 
     public void setOnFileClicked(Consumer<SourceFile> onFileClicked) {
@@ -75,7 +76,9 @@ public class FileButton extends JComponent {
 
     @Override
     public Dimension getPreferredSize() {
-        int width = getParent() != null && getParent().getWidth() > 0 ? getParent().getWidth() : 200;
+        int indent = EditorCoordinates.treeIndent(level);
+        int textWidth = Global.getStringWidth(name);
+        int width = 16 + indent + textWidth + 8;
         return new Dimension(width, Global.getLineHeight() + 6);
     }
 

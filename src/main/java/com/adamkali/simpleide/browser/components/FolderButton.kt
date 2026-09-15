@@ -4,6 +4,7 @@ import com.adamkali.simpleide.Global
 import com.adamkali.simpleide.editor.EditorCoordinates
 import com.adamkali.simpleide.project.SourcePackage
 import java.awt.Color
+import java.awt.Component
 import java.awt.Dimension
 import java.awt.Graphics
 import java.awt.event.MouseAdapter
@@ -38,6 +39,7 @@ class FolderButton(private val folder: SourcePackage) : JComponent(), SwingConst
         isOpaque = true
         background = Color.WHITE
         foreground = Color.BLACK
+        alignmentX = Component.LEFT_ALIGNMENT
         addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
                 dropped = !dropped
@@ -77,7 +79,10 @@ class FolderButton(private val folder: SourcePackage) : JComponent(), SwingConst
     }
 
     override fun getPreferredSize(): Dimension {
-        val width = parent?.width?.takeIf { it > 0 } ?: 200
+        val indent = EditorCoordinates.treeIndent(level)
+        val arrowSize = 8
+        val textWidth = Global.getStringWidth(folder.getName())
+        val width = 6 + indent + arrowSize + 6 + textWidth + 8
         return Dimension(width, Global.getLineHeight() + 6)
     }
 
