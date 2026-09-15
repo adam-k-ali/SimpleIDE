@@ -13,8 +13,6 @@ import java.awt.Component
 import java.awt.Graphics
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
-import java.io.FileNotFoundException
-import java.nio.file.Paths
 import javax.swing.BoxLayout
 import javax.swing.JLabel
 import javax.swing.JPanel
@@ -40,11 +38,8 @@ class ProjectBrowser : JPanel(), ProjectActivityListener, MouseListener {
 
         ProjectManager.registerCallback(this)
 
-        // Load a default project (for now)
-        try {
-            ProjectManager.load(Paths.get("src/main/resources/testproject/TestProject.proj"))
-        } catch (e: FileNotFoundException) {
-            throw RuntimeException(e)
+        if (ProjectManager.activeProject != null) {
+            rebuildTree()
         }
     }
 
