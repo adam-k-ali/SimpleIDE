@@ -74,6 +74,8 @@ The launch config sets `cwd` to `${workspaceFolder}` and compiles with Maven fir
 - The app does not compile or run the open project.
 - After a project is open, there is no File menu to open or create another one; restart the app to return to the Home Screen.
 
+A sequenced plan to close these gaps (edit correctness, project session, undo/find, multi-file tabs, lexer, compile/run) is in [ROADMAP.md](ROADMAP.md).
+
 ## CI
 
 GitHub Actions runs `mvn --batch-mode test` on pushes to `main` and on pull requests, with headless AWT.
