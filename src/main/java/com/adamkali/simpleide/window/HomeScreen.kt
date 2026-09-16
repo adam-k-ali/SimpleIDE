@@ -12,11 +12,9 @@ import java.nio.file.Path
 import javax.swing.Box
 import javax.swing.BoxLayout
 import javax.swing.JButton
-import javax.swing.JFileChooser
 import javax.swing.JLabel
 import javax.swing.JOptionPane
 import javax.swing.JPanel
-import javax.swing.filechooser.FileNameExtensionFilter
 
 data class NewProjectRequest(
     val parentDir: Path,
@@ -31,7 +29,7 @@ class HomeScreen : JPanel() {
     val openButton = JButton("Open Project")
     val newButton = JButton("New Project")
 
-    var chooseProjectFile: () -> Path? = { defaultChooseProjectFile() }
+    var chooseProjectFile: () -> Path? = { ProjectFileChooser.chooseProjectFile(this) }
     var chooseNewProject: () -> NewProjectRequest? = { defaultChooseNewProject() }
     var showError: (title: String, message: String) -> Unit = ::swingError
     var onProjectReady: () -> Unit = {}
@@ -69,8 +67,10 @@ class HomeScreen : JPanel() {
     }
 
     private fun openProject() {
-        val path = chooseProjectFile() ?: return
+        val selected = chooseProjectFile() ?: return
         try {
+            val path = ProjectFileChooser.resolveProjectFile(selected)
+                ?: throw IllegalArgumentException("Please choose a SimpleIDE project file (.proj)")
             ProjectManager.load(path)
             onProjectReady()
         } catch (e: Exception) {
@@ -88,32 +88,15 @@ class HomeScreen : JPanel() {
         }
     }
 
-    private fun defaultChooseProjectFile(): Path? {
-        val chooser = JFileChooser()
-        chooser.dialogTitle = "Open Project"
-        chooser.fileFilter = FileNameExtensionFilter("SimpleIDE Project (*.proj)", "proj")
-        val result = chooser.showOpenDialog(this)
-        if (result != JFileChooser.APPROVE_OPTION) {
-            return null
-        }
-        return chooser.selectedFile.toPath()
-    }
-
     private fun defaultChooseNewProject(): NewProjectRequest? {
-        val chooser = JFileChooser()
-        chooser.dialogTitle = "Choose Project Location"
-        chooser.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
-        val result = chooser.showDialog(this, "Select")
-        if (result != JFileChooser.APPROVE_OPTION) {
-            return null
-        }
+        val parentDir = ProjectFileChooser.chooseDirectory(this) ?: return null
         val name = JOptionPane.showInputDialog(
             this,
             "Project name:",
             "New Project",
             JOptionPane.PLAIN_MESSAGE
         ) ?: return null
-        return NewProjectRequest(chooser.selectedFile.toPath(), name)
+        return NewProjectRequest(parentDir, name)
     }
 
     private fun swingError(title: String, message: String) {

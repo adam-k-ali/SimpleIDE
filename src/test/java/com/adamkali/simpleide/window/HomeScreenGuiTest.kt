@@ -54,6 +54,71 @@ class HomeScreenGuiTest {
     }
 
     @Test
+    fun openProject_resolvesPathWhenExtensionIsMissing() {
+        val parent = Files.createTempDirectory("simpleide-home-ext-")
+        parent.toFile().deleteOnExit()
+        val projectDir = parent.resolve("HiddenExt")
+        Files.createDirectories(projectDir.resolve("src"))
+        Files.writeString(
+            projectDir.resolve("HiddenExt.proj"),
+            """{"projectName":"HiddenExt","sourcePaths":["src"]}"""
+        )
+
+        var ready = false
+        val home = HomeScreen()
+        home.chooseProjectFile = { projectDir.resolve("HiddenExt") }
+        home.onProjectReady = { ready = true }
+
+        home.openButton.doClick()
+
+        assertTrue(ready)
+        assertEquals("HiddenExt", ProjectManager.activeProject?.getProjectName())
+    }
+
+    @Test
+    fun openProject_loadsProjInsideSelectedFolder() {
+        val parent = Files.createTempDirectory("simpleide-home-dir-")
+        parent.toFile().deleteOnExit()
+        val projectDir = parent.resolve("FolderOpen")
+        Files.createDirectories(projectDir.resolve("src"))
+        Files.writeString(
+            projectDir.resolve("FolderOpen.proj"),
+            """{"projectName":"FolderOpen","sourcePaths":["src"]}"""
+        )
+
+        var ready = false
+        val home = HomeScreen()
+        home.chooseProjectFile = { projectDir }
+        home.onProjectReady = { ready = true }
+
+        home.openButton.doClick()
+
+        assertTrue(ready)
+        assertEquals("FolderOpen", ProjectManager.activeProject?.getProjectName())
+    }
+
+    @Test
+    fun openProject_showsErrorForNonProjectFile() {
+        val parent = Files.createTempDirectory("simpleide-home-badfile-")
+        parent.toFile().deleteOnExit()
+        val javaFile = parent.resolve("Main.java")
+        Files.writeString(javaFile, "class Main {}")
+
+        var ready = false
+        val errors = mutableListOf<String>()
+        val home = HomeScreen()
+        home.chooseProjectFile = { javaFile }
+        home.showError = { _, message -> errors.add(message) }
+        home.onProjectReady = { ready = true }
+
+        home.openButton.doClick()
+
+        assertFalse(ready)
+        assertNull(ProjectManager.activeProject)
+        assertTrue(errors.any { it.contains(".proj") }, errors.toString())
+    }
+
+    @Test
     fun newProject_writesFilesLoadsAndInvokesReady() {
         var ready = false
         val parent = Files.createTempDirectory("simpleide-home-")

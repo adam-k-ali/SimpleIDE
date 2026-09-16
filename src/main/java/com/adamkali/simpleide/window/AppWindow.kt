@@ -8,6 +8,7 @@ import java.awt.BorderLayout
 import java.awt.Dimension
 import javax.swing.JFrame
 import javax.swing.JPanel
+import javax.swing.SwingUtilities
 import javax.swing.Timer
 import javax.swing.UIManager
 
@@ -39,8 +40,11 @@ object AppWindow {
         frame.setLocationRelativeTo(null)
 
         val homeScreen = HomeScreen()
-        homeScreen.onProjectReady = { showEditor() }
-        frame.add(homeScreen)
+        // After the macOS file sheet/dialog closes, the parent window is
+        // redrawn from the current event. Swap the editor on the next pulse
+        // so the Home Screen does not stay on screen.
+        homeScreen.onProjectReady = { SwingUtilities.invokeLater { showEditor() } }
+        frame.contentPane = homeScreen
         frame.isVisible = true
     }
 
@@ -53,9 +57,8 @@ object AppWindow {
         container.add(statusPanel, BorderLayout.SOUTH)
         container.preferredSize = Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE)
 
-        frame.contentPane.removeAll()
-        frame.contentPane.add(container)
-        frame.revalidate()
+        frame.contentPane = container
+        frame.validate()
         frame.repaint()
         editorPanel.codeEditor.requestFocusInWindow()
 
