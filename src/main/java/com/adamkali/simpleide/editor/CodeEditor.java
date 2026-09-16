@@ -261,9 +261,98 @@ public class CodeEditor extends JPanel implements Scrollable {
             return (mods & (InputEvent.CTRL_DOWN_MASK | InputEvent.META_DOWN_MASK)) != 0;
         }
 
+        private boolean isAlt(KeyEvent e) {
+            return (e.getModifiersEx() & InputEvent.ALT_DOWN_MASK) != 0;
+        }
+
+        private boolean isShift(KeyEvent e) {
+            return (e.getModifiersEx() & InputEvent.SHIFT_DOWN_MASK) != 0;
+        }
+
+        private void handleArrow(KeyEvent e, int keyCode) {
+            var cursor = Global.getCursor();
+            boolean alt = isAlt(e);
+            boolean menu = isMenuShortcut(e);
+            boolean shift = isShift(e);
+
+            if (menu && alt) {
+                switch (keyCode) {
+                    case KeyEvent.VK_LEFT:
+                        cursor.moveAndSelect(cursor::moveLeftByToken);
+                        break;
+                    case KeyEvent.VK_RIGHT:
+                        cursor.moveAndSelect(cursor::moveRightByToken);
+                        break;
+                    case KeyEvent.VK_UP:
+                        cursor.moveAndSelect(cursor::moveUp);
+                        break;
+                    case KeyEvent.VK_DOWN:
+                        cursor.moveAndSelect(cursor::moveDown);
+                        break;
+                    default:
+                        break;
+                }
+            } else if (alt) {
+                switch (keyCode) {
+                    case KeyEvent.VK_LEFT:
+                        cursor.clearSelection();
+                        cursor.moveLeftByToken();
+                        break;
+                    case KeyEvent.VK_RIGHT:
+                        cursor.clearSelection();
+                        cursor.moveRightByToken();
+                        break;
+                    case KeyEvent.VK_UP:
+                        ActionsList.MOVE_LINE_UP.execute();
+                        break;
+                    case KeyEvent.VK_DOWN:
+                        ActionsList.MOVE_LINE_DOWN.execute();
+                        break;
+                    default:
+                        break;
+                }
+            } else if (shift) {
+                switch (keyCode) {
+                    case KeyEvent.VK_LEFT:
+                        cursor.moveAndSelect(cursor::moveLeft);
+                        break;
+                    case KeyEvent.VK_RIGHT:
+                        cursor.moveAndSelect(cursor::moveRight);
+                        break;
+                    case KeyEvent.VK_UP:
+                        cursor.moveAndSelect(cursor::moveUp);
+                        break;
+                    case KeyEvent.VK_DOWN:
+                        cursor.moveAndSelect(cursor::moveDown);
+                        break;
+                    default:
+                        break;
+                }
+            } else {
+                cursor.clearSelection();
+                switch (keyCode) {
+                    case KeyEvent.VK_LEFT:
+                        cursor.moveLeft();
+                        break;
+                    case KeyEvent.VK_RIGHT:
+                        cursor.moveRight();
+                        break;
+                    case KeyEvent.VK_UP:
+                        cursor.moveUp();
+                        break;
+                    case KeyEvent.VK_DOWN:
+                        cursor.moveDown();
+                        break;
+                    default:
+                        break;
+                }
+            }
+            e.consume();
+        }
+
         @Override
         public void keyTyped(KeyEvent e) {
-            if (isMenuShortcut(e)) {
+            if (isMenuShortcut(e) || e.getKeyChar() == KeyEvent.CHAR_UNDEFINED) {
                 return;
             }
             Global.getCursor().clearSelection();
@@ -297,28 +386,11 @@ public class CodeEditor extends JPanel implements Scrollable {
             setKey(e.getKeyCode(), true);
             switch (e.getKeyCode()) {
                 case KeyEvent.VK_LEFT:
-                    Global.getCursor().clearSelection();
-                    Global.getCursor().moveLeft();
-                    ensureCursorVisible();
-                    e.consume();
-                    break;
                 case KeyEvent.VK_RIGHT:
-                    Global.getCursor().clearSelection();
-                    Global.getCursor().moveRight();
-                    ensureCursorVisible();
-                    e.consume();
-                    break;
                 case KeyEvent.VK_UP:
-                    Global.getCursor().clearSelection();
-                    Global.getCursor().moveUp();
-                    ensureCursorVisible();
-                    e.consume();
-                    break;
                 case KeyEvent.VK_DOWN:
-                    Global.getCursor().clearSelection();
-                    Global.getCursor().moveDown();
+                    handleArrow(e, e.getKeyCode());
                     ensureCursorVisible();
-                    e.consume();
                     break;
 
                 case KeyEvent.VK_D:
