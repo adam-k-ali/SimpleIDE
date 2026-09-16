@@ -39,7 +39,9 @@ mvn --batch-mode test
 | Theme JSON | `src/main/resources/preferences/editor-theme.json`, `editor/io/theme/ThemeLoader.kt` |
 | Shared cursor / font / theme | `Global.java` |
 
-`Line.rewrite()` calls `project.lang.Lexer.lex()`. A leftover Java token tree exists under `editor.lang`; do **not** extend it for highlighting. Add keywords/operators in `project.lang.tokens` and register them in `project.lang.Lexer`.
+`Line.rewrite()` calls `project.lang.Lexer.lex()`. Highlighting lives only in `project.lang`. Add keywords/operators in `project.lang.tokens` and register them in `project.lang.Lexer`.
+
+Functionality priorities and phase order: [ROADMAP.md](ROADMAP.md).
 
 ## Tests
 
