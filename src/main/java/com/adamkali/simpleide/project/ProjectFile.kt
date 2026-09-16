@@ -2,7 +2,7 @@ package com.adamkali.simpleide.project
 
 /**
  * ProjectFile is a data class that represents a project file.
- * @property rootPath The root path of the project.
+ * @property rootPath The project folder that contains `.simple`. Not persisted.
  * @property projectName The name of the project.
  * @property sourcePaths The paths of the source folders of the project.
  */

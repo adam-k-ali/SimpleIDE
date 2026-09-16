@@ -21,10 +21,10 @@ class ProjectManagerTest {
         val parent = tempDir()
         val dest = ProjectManager.create(parent, "Demo")
 
-        assertEquals(parent.resolve("Demo").resolve("Demo.proj"), dest)
-        assertTrue(Files.isRegularFile(dest))
-        assertTrue(Files.isDirectory(parent.resolve("Demo").resolve("src")))
-        assertEquals(0, Files.list(parent.resolve("Demo").resolve("src")).use { it.count() })
+        assertEquals(parent.resolve("Demo"), dest)
+        assertTrue(Files.isRegularFile(dest.resolve(".simple").resolve("Demo.proj")))
+        assertTrue(Files.isDirectory(dest.resolve("src")))
+        assertEquals(0, Files.list(dest.resolve("src")).use { it.count() })
 
         val project = ProjectManager.activeProject
         assertEquals("Demo", project?.getProjectName())
@@ -39,7 +39,8 @@ class ProjectManagerTest {
     fun create_trimsProjectName() {
         val parent = tempDir()
         val dest = ProjectManager.create(parent, "  Trimmed  ")
-        assertEquals(parent.resolve("Trimmed").resolve("Trimmed.proj"), dest)
+        assertEquals(parent.resolve("Trimmed"), dest)
+        assertTrue(Files.isRegularFile(dest.resolve(".simple").resolve("Trimmed.proj")))
         assertEquals("Trimmed", ProjectManager.activeProject?.getProjectName())
     }
 
@@ -89,6 +90,75 @@ class ProjectManagerTest {
         ProjectManager.load(dest)
         val folders = ProjectManager.activeProject!!.sourceFolders
         assertEquals(listOf("src"), folders.map { it.getName() })
+    }
+
+    @Test
+    fun load_ofBareFolder_createsSimpleAndProjWithoutSrc() {
+        val dir = tempDir().resolve("Bare")
+        Files.createDirectories(dir)
+
+        ProjectManager.load(dir)
+
+        assertTrue(Files.isRegularFile(dir.resolve(".simple").resolve("Bare.proj")))
+        assertFalse(Files.exists(dir.resolve("src")))
+        assertEquals("Bare", ProjectManager.activeProject?.getProjectName())
+        val json = Files.readString(dir.resolve(".simple").resolve("Bare.proj"), StandardCharsets.UTF_8)
+        assertTrue(json.contains("\"projectName\""), json)
+        assertTrue(json.contains("Bare"), json)
+        assertTrue(json.contains("\"sourcePaths\""), json)
+        assertFalse(json.contains("rootPath"), json)
+    }
+
+    @Test
+    fun load_ofSimpleWithNoProj_writesProj() {
+        val dir = tempDir().resolve("EmptyMeta")
+        Files.createDirectories(dir.resolve(".simple"))
+
+        ProjectManager.load(dir)
+
+        assertTrue(Files.isRegularFile(dir.resolve(".simple").resolve("EmptyMeta.proj")))
+        assertEquals("EmptyMeta", ProjectManager.activeProject?.getProjectName())
+        assertEquals(1, Files.list(dir.resolve(".simple")).use { it.count() })
+    }
+
+    @Test
+    fun load_ofExistingProj_doesNotOverwrite() {
+        val dest = ProjectManager.create(tempDir(), "Kept")
+        val proj = dest.resolve(".simple").resolve("Kept.proj")
+        val before = Files.readString(proj, StandardCharsets.UTF_8)
+        ProjectManager.reset()
+
+        ProjectManager.load(dest)
+
+        assertEquals(before, Files.readString(proj, StandardCharsets.UTF_8))
+        assertEquals("Kept", ProjectManager.activeProject?.getProjectName())
+    }
+
+    @Test
+    fun load_ofMultipleProj_fails() {
+        val dir = tempDir().resolve("Multi")
+        val simple = dir.resolve(".simple")
+        Files.createDirectories(simple)
+        Files.writeString(simple.resolve("a.proj"), """{"projectName":"A","sourcePaths":["src"]}""")
+        Files.writeString(simple.resolve("b.proj"), """{"projectName":"B","sourcePaths":["src"]}""")
+
+        val error = assertThrows(IllegalArgumentException::class.java) {
+            ProjectManager.load(dir)
+        }
+        assertTrue(error.message!!.contains("exactly one"), error.message)
+        assertEquals(null, ProjectManager.activeProject)
+    }
+
+    @Test
+    fun load_ofNonDirectory_fails() {
+        val file = Files.createTempFile("simpleide-not-a-project-", ".txt")
+        file.toFile().deleteOnExit()
+
+        val error = assertThrows(IllegalArgumentException::class.java) {
+            ProjectManager.load(file)
+        }
+        assertTrue(error.message!!.contains("not a directory"), error.message)
+        assertEquals(null, ProjectManager.activeProject)
     }
 
     private fun tempDir(): Path = Files.createTempDirectory("simpleide-project-").also {

@@ -28,7 +28,7 @@ class EditorPanelGuiTest {
     @Test
     fun expandingFolder_doesNotChangeBrowserOrEditorColumnWidths() {
         val panel = EditorPanel()
-        ProjectManager.load(Paths.get("src/main/resources/testproject/TestProject.proj"))
+        ProjectManager.load(Paths.get("src/main/resources/testproject"))
         panel.setSize(800, 600)
         panel.doLayout()
 
@@ -55,7 +55,7 @@ class EditorPanelGuiTest {
     @Test
     fun activityBar_togglesSidebarVisibility() {
         val panel = EditorPanel()
-        ProjectManager.load(Paths.get("src/main/resources/testproject/TestProject.proj"))
+        ProjectManager.load(Paths.get("src/main/resources/testproject"))
         panel.setSize(800, 600)
         panel.doLayout()
 
@@ -81,7 +81,7 @@ class EditorPanelGuiTest {
     @Test
     fun tabBar_showsOpenedFileName() {
         val panel = EditorPanel()
-        ProjectManager.load(Paths.get("src/main/resources/testproject/TestProject.proj"))
+        ProjectManager.load(Paths.get("src/main/resources/testproject"))
         assertEquals("Untitled", panel.editorTabBar.displayedTitle())
 
         assertTrue(OpenFile.open(Paths.get("src/main/resources/testproject/src/test/Main.java")))
