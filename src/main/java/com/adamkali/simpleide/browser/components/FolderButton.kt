@@ -2,8 +2,8 @@ package com.adamkali.simpleide.browser.components
 
 import com.adamkali.simpleide.Global
 import com.adamkali.simpleide.editor.EditorCoordinates
+import com.adamkali.simpleide.preferences.EditorColors
 import com.adamkali.simpleide.project.SourcePackage
-import java.awt.Color
 import java.awt.Component
 import java.awt.Dimension
 import java.awt.Graphics
@@ -30,6 +30,8 @@ class FolderButton(private val folder: SourcePackage) : JComponent(), SwingConst
 
     var onDroppedChanged: (() -> Unit)? = null
 
+    private var hovered = false
+
     fun getText(): String {
         return folder.getName()
     }
@@ -37,13 +39,23 @@ class FolderButton(private val folder: SourcePackage) : JComponent(), SwingConst
     init {
         font = Global.getFont()
         isOpaque = true
-        background = Color.WHITE
-        foreground = Color.BLACK
+        background = EditorColors.sidebarBackground()
+        foreground = EditorColors.sidebarForeground()
         alignmentX = Component.LEFT_ALIGNMENT
         addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
                 dropped = !dropped
                 onDroppedChanged?.invoke()
+            }
+
+            override fun mouseEntered(e: MouseEvent) {
+                hovered = true
+                repaint()
+            }
+
+            override fun mouseExited(e: MouseEvent) {
+                hovered = false
+                repaint()
             }
         })
     }
@@ -61,7 +73,11 @@ class FolderButton(private val folder: SourcePackage) : JComponent(), SwingConst
     override fun paintComponent(g: Graphics) {
         super.paintComponent(g)
 
-        g.color = if (selected) Color(230, 230, 255) else background
+        g.color = when {
+            selected -> EditorColors.sidebarSelection()
+            hovered -> EditorColors.sidebarHover()
+            else -> EditorColors.sidebarBackground()
+        }
         g.fillRect(0, 0, width, height)
 
         val indent = EditorCoordinates.treeIndent(level)
@@ -70,7 +86,7 @@ class FolderButton(private val folder: SourcePackage) : JComponent(), SwingConst
         val arrowY = (height - arrowSize) / 2
         val direction = if (dropped) Direction.DOWN else Direction.RIGHT
 
-        g.color = foreground
+        g.color = EditorColors.sidebarForeground()
         drawArrow(g, direction, arrowX, arrowY, arrowSize, arrowSize)
 
         val fm = g.fontMetrics

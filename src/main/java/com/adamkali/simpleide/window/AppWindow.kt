@@ -3,9 +3,9 @@ package com.adamkali.simpleide.window
 import com.adamkali.simpleide.Global
 import com.adamkali.simpleide.editor.io.theme.ThemeLoader
 import com.adamkali.simpleide.preferences.ThemeData
-import java.awt.Component
+import com.formdev.flatlaf.FlatDarkLaf
+import java.awt.BorderLayout
 import java.awt.Dimension
-import javax.swing.BoxLayout
 import javax.swing.JFrame
 import javax.swing.JPanel
 import javax.swing.Timer
@@ -29,31 +29,40 @@ object AppWindow {
     }
 
     fun run() {
-        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
+        FlatDarkLaf.setup()
+        UIManager.put("TitlePane.unifiedBackground", false)
         loadTheme()
 
         frame = JFrame("SimpleIDE")
+        frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
+        frame.setSize(1100, 720)
+        frame.setLocationRelativeTo(null)
+
+        val homeScreen = HomeScreen()
+        homeScreen.onProjectReady = { showEditor() }
+        frame.add(homeScreen)
+        frame.isVisible = true
+    }
+
+    private fun showEditor() {
         editorPanel = EditorPanel()
         statusPanel = StatusPanel()
 
-        frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
-        frame.setSize(800, 600)
-        frame.setLocationRelativeTo(null)
+        val container = JPanel(BorderLayout())
+        container.add(editorPanel, BorderLayout.CENTER)
+        container.add(statusPanel, BorderLayout.SOUTH)
+        container.preferredSize = Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE)
 
-        val container = JPanel()
-        container.layout = BoxLayout(container, BoxLayout.Y_AXIS)
-        editorPanel.alignmentX = Component.LEFT_ALIGNMENT
-        statusPanel.alignmentX = Component.LEFT_ALIGNMENT
-        editorPanel.maximumSize = Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE)
-        container.add(editorPanel)
-        container.add(statusPanel)
-
-        frame.add(container)
-        frame.isVisible = true
+        frame.contentPane.removeAll()
+        frame.contentPane.add(container)
+        frame.revalidate()
+        frame.repaint()
         editorPanel.codeEditor.requestFocusInWindow()
 
+        editorTimer?.stop()
         editorTimer = Timer(1000 / 60) {
             editorPanel.codeEditor.update()
+            editorPanel.editorTabBar.refresh()
         }
         editorTimer?.start()
     }

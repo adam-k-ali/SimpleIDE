@@ -2,7 +2,7 @@
 
 SimpleIDE is a Maven Swing desktop editor (Java 21 bytecode + Kotlin 2.4). Entry point: `com.adamkali.simpleide.App` in `src/main/java/com/adamkali/simpleide/App.java`. Kotlin 1.9 cannot run on JDK 26; keep `kotlin.version` at 2.4.20+. Do not raise `maven.compiler.release` / `jvmTarget` to 25+ until Kotlin test-compile can load those class files.
 
-Theme and the sample `.proj` are loaded as filesystem paths relative to the process working directory. Always run and debug from the **repository root**.
+Theme JSON is loaded as a filesystem path relative to the process working directory. Always run and debug from the **repository root**. The sample `.proj` is not auto-loaded; open it from the Home Screen or in tests via `ProjectManager.load`.
 
 ## Commands
 
@@ -31,9 +31,10 @@ mvn --batch-mode test
 | Document / cursor | `editor/io/Document`, `Line`, `EditorCursor` |
 | Layout math (gutter, tabs, hit-testing) | `editor/EditorCoordinates.java` |
 | Syntax highlighting | `project/lang/Lexer.java` and `project/lang/tokens/**` only |
-| Project load / `.proj` JSON | `project/ProjectManager.kt`, `project/ProjectFile.kt` |
+| Project load / create / `.proj` JSON | `project/ProjectManager.kt`, `project/ProjectFile.kt` |
 | Open / save / reload source files | `editor/io/OpenFile.kt`, `editor/io/Document.kt` |
 | Project tree UI | `browser/`, `browser/components/` |
+| Home Screen (open / new project) | `window/HomeScreen.kt`, `window/AppWindow.kt` |
 | Window chrome | `window/AppWindow.kt`, `EditorPanel`, `StatusPanel` |
 | Theme JSON | `src/main/resources/preferences/editor-theme.json`, `editor/io/theme/ThemeLoader.kt` |
 | Shared cursor / font / theme | `Global.java` |
@@ -49,6 +50,7 @@ mvn --batch-mode test
 ```kotlin
 Global.setCursor(EditorCursor(Document(), 0, 0))
 OpenFile.reset()
+ProjectManager.reset()
 Global.setTheme(ThemeData(ThemeLoader.load("src/main/resources/preferences/editor-theme.json")))
 ```
 
@@ -59,7 +61,7 @@ Theme load in tests also depends on CWD = repo root.
 - Mixed Java and Kotlin live together under `src/main/java` (package `com.adamkali.simpleide`). New UI/project code tends to Kotlin; match the nearest files.
 - No Checkstyle, ktlint, Spotless, or EditorConfig. No env files or secrets.
 - Kotlin Maven plugin compiles `src/main/java` (`jvmTarget` 21, matching `maven.compiler.release`). Default `maven-compiler-plugin` compile executions are disabled in `pom.xml`; leave that hybrid setup alone unless you are changing the build.
-- `ProjectManager` load exists; `.proj` save does not. Clicking a file in the project tree opens it in the editor (`OpenFile`). Ctrl/Cmd+S saves, Ctrl/Cmd+R reloads from disk.
+- `ProjectManager` can load and create/save `.proj` files (`projectName` + `sourcePaths`; `rootPath` is not persisted). The Home Screen is shown at startup; `ProjectBrowser` does not auto-load the sample. Tests that need the sample tree should call `ProjectManager.load(Paths.get("src/main/resources/testproject/TestProject.proj"))`. Clicking a file in the project tree opens it in the editor (`OpenFile`). Ctrl/Cmd+S saves, Ctrl/Cmd+R reloads from disk.
 
 ## Sample data
 

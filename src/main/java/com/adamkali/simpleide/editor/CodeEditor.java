@@ -37,7 +37,7 @@ public class CodeEditor extends JPanel implements Scrollable {
         this.setFont(Global.getFont());
 
         // Setup canvas graphics
-        setBackground(Color.WHITE);
+        setBackground(EditorColors.editorBackground());
     }
 
     /**
@@ -86,9 +86,9 @@ public class CodeEditor extends JPanel implements Scrollable {
     }
 
     private void drawLineNumbers(Graphics g) {
-        g.setColor(Color.LIGHT_GRAY);
+        g.setColor(EditorColors.gutterBackground());
         g.fillRect(0, 0, EditorCoordinates.LINE_NUM_WIDTH, getHeight());
-        g.setColor(Color.BLACK);
+        g.setColor(EditorColors.gutterForeground());
         for (int i = 0; i < Global.getCursor().getDocument().getLineCount(); i++) {
             g.drawString(String.valueOf(i + 1), EditorCoordinates.MARGIN_LEFT, EditorCoordinates.MARGIN_TOP + (i + 1) * Global.getLineHeight());
         }
@@ -98,7 +98,7 @@ public class CodeEditor extends JPanel implements Scrollable {
         int x = EditorCoordinates.cursorX(Global.getCursor().getTextBeforeCursor(), Global::getStringWidth);
         int y = EditorCoordinates.cursorY(Global.getCursor().getLine(), Global.getLineHeight());
 
-        g.setColor(Color.BLACK);
+        g.setColor(EditorColors.editorForeground());
         g.drawLine(x, y, x, y + EditorCoordinates.CURSOR_HEIGHT);
     }
 
@@ -142,10 +142,7 @@ public class CodeEditor extends JPanel implements Scrollable {
     }
 
     private void highlightCurrentLine(Graphics g) {
-        if (Global.getTheme() == null || Global.getTheme().getCurrentLineColor().getColor() == null) {
-            return;
-        }
-        g.setColor(Global.getTheme().getCurrentLineColor().getColor().foregroundColor());
+        g.setColor(EditorColors.currentLineHighlight());
         int y = EditorCoordinates.lineTop(Global.getCursor().getLine(), Global.getLineHeight());
         g.fillRect(EditorCoordinates.textAreaX(), y, Math.max(0, getWidth() - EditorCoordinates.textAreaX()), Global.getLineHeight());
     }
@@ -184,9 +181,10 @@ public class CodeEditor extends JPanel implements Scrollable {
 
     @Override
     protected void paintComponent(Graphics g) {
+        setBackground(EditorColors.editorBackground());
         super.paintComponent(g);
         g.setFont(Global.getFont());
-        g.setColor(Color.BLACK);
+        g.setColor(EditorColors.editorForeground());
 
         // Highlight sits behind text so glyphs, selection, and the cursor stay readable.
         highlightCurrentLine(g);
@@ -226,7 +224,16 @@ public class CodeEditor extends JPanel implements Scrollable {
         return false;
     }
 
-    private static class KeyboardHandler implements KeyListener {
+    /**
+     * Pans the parent viewport only when the caret would leave the visible area.
+     */
+    private void ensureCursorVisible() {
+        int x = EditorCoordinates.cursorX(Global.getCursor().getTextBeforeCursor(), Global::getStringWidth);
+        int y = EditorCoordinates.lineTop(Global.getCursor().getLine(), Global.getLineHeight());
+        scrollRectToVisible(new Rectangle(x, y, 1, Global.getLineHeight()));
+    }
+
+    private class KeyboardHandler implements KeyListener {
         // Keeps track of which keys are pressed. A BitSet grows past 256 so
         // extended key codes cannot throw ArrayIndexOutOfBoundsException.
         private final BitSet keys = new BitSet();
@@ -383,6 +390,7 @@ public class CodeEditor extends JPanel implements Scrollable {
                 case KeyEvent.VK_UP:
                 case KeyEvent.VK_DOWN:
                     handleArrow(e, e.getKeyCode());
+                    ensureCursorVisible();
                     break;
 
                 case KeyEvent.VK_D:

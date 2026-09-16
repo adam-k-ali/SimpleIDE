@@ -21,8 +21,8 @@ class StatusBarTest {
 
     @Test
     fun formatCursorPosition_isOneBasedToMatchGutter() {
-        assertEquals("Line: 1, Column: 1", StatusBar.formatCursorPosition(0, 0))
-        assertEquals("Line: 4, Column: 12", StatusBar.formatCursorPosition(3, 11))
+        assertEquals("Ln 1, Col 1", StatusBar.formatCursorPosition(0, 0))
+        assertEquals("Ln 4, Col 12", StatusBar.formatCursorPosition(3, 11))
     }
 
     @Test

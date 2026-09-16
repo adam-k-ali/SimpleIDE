@@ -46,7 +46,7 @@ class FolderButtonGuiTest {
         for (x in 0 until image.width) {
             for (y in 0 until image.height) {
                 val color = GuiRender.rgb(image, x, y)
-                val isContent = color.red < 80 && color.green < 80 && color.blue < 80 && color.alpha > 200
+                val isContent = color.red > 180 && color.green > 180 && color.blue > 180 && color.alpha > 200
                 if (isContent) {
                     minY = minOf(minY, y)
                     maxY = maxOf(maxY, y)
@@ -82,7 +82,7 @@ class FileButtonGuiTest {
 
         val image = GuiRender.render(button, 220, button.preferredSize.height)
         assertTrue(
-            GuiRender.hasDarkGlyph(image, 0, 0, image.width - 1, image.height - 1),
+            GuiRender.hasLightGlyph(image, 0, 0, image.width - 1, image.height - 1),
             "file name glyphs should be visible"
         )
         assertFalse(GuiRender.hasColor(image, Color.RED, 20))

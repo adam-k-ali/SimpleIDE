@@ -3,7 +3,7 @@ package com.adamkali.simpleide.editor
 import com.adamkali.simpleide.Global
 import com.adamkali.simpleide.activity.CursorActivityListener
 import com.adamkali.simpleide.editor.io.TextPosition
-import java.awt.Color
+import com.adamkali.simpleide.preferences.EditorColors
 import java.awt.Dimension
 import java.awt.Graphics
 import javax.swing.JComponent
@@ -19,6 +19,7 @@ class StatusBar : JComponent(), CursorActivityListener {
     init {
         font = Global.getFont()
         isOpaque = true
+        background = EditorColors.statusBarBackground()
         preferredSize = Dimension(0, STATUS_BAR_HEIGHT)
         minimumSize = Dimension(0, STATUS_BAR_HEIGHT)
         Global.getCursor().setActionListener(this)
@@ -32,13 +33,13 @@ class StatusBar : JComponent(), CursorActivityListener {
         super.paintComponent(g)
         if (g == null) return
 
-        g.color = Color.LIGHT_GRAY
+        g.color = EditorColors.statusBarBackground()
         g.fillRect(0, 0, width, height)
 
         g.font = font
         val fm = g.fontMetrics
         val textY = (height + fm.ascent - fm.descent) / 2
-        g.color = Color.BLACK
+        g.color = EditorColors.statusBarForeground()
         g.drawString("SimpleIDE", MARGIN_LEFT, textY)
 
         val position = formatCursorPosition(Global.getCursor().getLine(), Global.getCursor().getColumn())
@@ -48,11 +49,11 @@ class StatusBar : JComponent(), CursorActivityListener {
 
     companion object {
         @JvmField
-        var STATUS_BAR_HEIGHT: Int = 32
+        var STATUS_BAR_HEIGHT: Int = 22
 
         @JvmStatic
         fun formatCursorPosition(line: Int, column: Int): String {
-            return String.format("Line: %d, Column: %d", line + 1, column + 1)
+            return String.format("Ln %d, Col %d", line + 1, column + 1)
         }
     }
 

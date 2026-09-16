@@ -1,18 +1,80 @@
 {
   "current_line_highlight": {
     "color": {
-      "background": [
-        30,
-        30,
-        30,
-        255
-      ],
-      "foreground": [
-        0,
-        0,
-        0,
-        20
-      ]
+      "background": [30, 30, 30, 255],
+      "foreground": [42, 45, 46, 255]
+    }
+  },
+  "editor": {
+    "color": {
+      "foreground": [212, 212, 212, 255],
+      "background": [30, 30, 30, 255]
+    }
+  },
+  "gutter": {
+    "color": {
+      "foreground": [133, 133, 133, 255],
+      "background": [30, 30, 30, 255]
+    }
+  },
+  "sidebar": {
+    "color": {
+      "foreground": [204, 204, 204, 255],
+      "background": [37, 37, 38, 255]
+    }
+  },
+  "activity_bar": {
+    "color": {
+      "foreground": [204, 204, 204, 255],
+      "background": [24, 24, 24, 255]
+    }
+  },
+  "status_bar": {
+    "color": {
+      "foreground": [255, 255, 255, 255],
+      "background": [0, 122, 204, 255]
+    }
+  },
+  "tab": {
+    "color": {
+      "foreground": [204, 204, 204, 255],
+      "background": [45, 45, 45, 255]
+    }
+  },
+  "accent": {
+    "color": {
+      "foreground": [0, 122, 204, 255],
+      "background": [0, 122, 204, 255]
+    }
+  },
+  "selection": {
+    "color": {
+      "foreground": [38, 79, 120, 255],
+      "background": [38, 79, 120, 255]
+    }
+  },
+  "plaintext": {
+    "color": {
+      "foreground": [212, 212, 212, 255],
+      "background": [30, 30, 30, 255]
+    }
+  },
+  "keyword": {
+    "color": {
+      "foreground": [86, 156, 214, 255],
+      "background": [30, 30, 30, 255]
+    }
+  },
+  "string": {
+    "color": {
+      "foreground": [206, 145, 120, 255],
+      "background": [30, 30, 30, 255]
+    }
+  },
+  "comment": {
+    "color": {
+      "foreground": [106, 153, 85, 255],
+      "background": [30, 30, 30, 255]
     }
   }
 }
