@@ -32,6 +32,13 @@ object GuiRender {
         component.dispatchEvent(event)
     }
 
+    fun hover(component: JComponent, entered: Boolean = true, x: Int = 2, y: Int = 2) {
+        val id = if (entered) MouseEvent.MOUSE_ENTERED else MouseEvent.MOUSE_EXITED
+        component.dispatchEvent(
+            MouseEvent(component, id, System.currentTimeMillis(), 0, x, y, 0, false)
+        )
+    }
+
     fun drag(component: JComponent, x1: Int, y1: Int, x2: Int, y2: Int) {
         component.dispatchEvent(
             MouseEvent(component, MouseEvent.MOUSE_PRESSED, System.currentTimeMillis(), InputEvent.BUTTON1_DOWN_MASK, x1, y1, 1, false)
