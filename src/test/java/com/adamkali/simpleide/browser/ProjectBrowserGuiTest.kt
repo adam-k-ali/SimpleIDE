@@ -39,6 +39,12 @@ class ProjectBrowserGuiTest {
         GuiRender.click(root)
         browser.doLayout()
 
+        val folders = browser.components.filterIsInstance<FolderButton>().map { it.getText() }
+        assertTrue(folders.contains("util"), "expanded src should show util, was $folders")
+        assertTrue(folders.contains("empty"), "expanded src should show empty, was $folders")
+        val srcFiles = browser.components.filterIsInstance<FileButton>().map { it.fileName }
+        assertTrue(srcFiles.contains("LargeFile.java"), "expanded src should show LargeFile.java, was $srcFiles")
+
         val nested = browser.components.filterIsInstance<FolderButton>().first { it.getText() == "test" }
         GuiRender.click(nested)
         browser.doLayout()
@@ -47,6 +53,22 @@ class ProjectBrowserGuiTest {
         assertTrue(files.contains("Main.java"), "expanded tree should show Main.java, was $files")
         assertTrue(files.contains("Person.java"), "expanded tree should show Person.java, was $files")
         assertTrue(browser.components.any { it is JLabel })
+    }
+
+    @Test
+    fun expandingNotes_revealsMarkdownAndKotlinFiles() {
+        val browser = ProjectBrowser()
+        ProjectManager.load(SAMPLE_PROJECT)
+        browser.setSize(240, 400)
+        browser.doLayout()
+
+        val notes = browser.components.filterIsInstance<FolderButton>().single { it.getText() == "notes" }
+        GuiRender.click(notes)
+        browser.doLayout()
+
+        val files = browser.components.filterIsInstance<FileButton>().map { it.fileName }
+        assertTrue(files.contains("README.md"), "expanded notes should show README.md, was $files")
+        assertTrue(files.contains("Sample.kt"), "expanded notes should show Sample.kt, was $files")
     }
 
     @Test

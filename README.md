@@ -56,7 +56,7 @@ The launch config sets `cwd` to `${workspaceFolder}` and compiles with Maven fir
 - Ctrl+D to duplicate the current line
 - Java-like syntax highlighting via a custom lexer
 - Current-line highlight from `src/main/resources/preferences/editor-theme.json`
-- Sample project at `src/main/resources/testproject/` (`.simple/TestProject.proj`); open the folder from the Home Screen
+- Sample project at `src/main/resources/testproject/` (`.simple/TestProject.proj` with `src` and `notes`); extra QA fixtures include a few-thousand-line file, highlighter kitchen, and nested packages. Open the folder from the Home Screen
 
 ## Layout
 
