@@ -427,6 +427,84 @@ class CodeEditorGuiTest {
     }
 
     @Test
+    fun home_fromMidLine_movesToColumnZero() {
+        Global.getCursor().getDocument().replaceText("hello")
+        Global.getCursor().moveTo(0, 3)
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_HOME, 0)
+
+        assertEquals(0, Global.getCursor().getLine())
+        assertEquals(0, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun end_fromMidLine_movesToLineLength() {
+        Global.getCursor().getDocument().replaceText("hello")
+        Global.getCursor().moveTo(0, 2)
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_END, 0)
+
+        assertEquals(0, Global.getCursor().getLine())
+        assertEquals(5, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun ctrlHome_fromLaterLine_movesToDocumentStart() {
+        Global.getCursor().getDocument().replaceText("abc\ndef\nghi")
+        Global.getCursor().moveTo(2, 1)
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_HOME, InputEvent.CTRL_DOWN_MASK)
+
+        assertEquals(0, Global.getCursor().getLine())
+        assertEquals(0, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun metaHome_fromLaterLine_movesToDocumentStart() {
+        Global.getCursor().getDocument().replaceText("abc\ndef\nghi")
+        Global.getCursor().moveTo(2, 1)
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_HOME, InputEvent.META_DOWN_MASK)
+
+        assertEquals(0, Global.getCursor().getLine())
+        assertEquals(0, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun ctrlEnd_movesToLastLineLastColumn() {
+        Global.getCursor().getDocument().replaceText("abc\ndef\nghi")
+        Global.getCursor().moveTo(0, 1)
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_END, InputEvent.CTRL_DOWN_MASK)
+
+        assertEquals(2, Global.getCursor().getLine())
+        assertEquals(3, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun home_clearsExistingSelection() {
+        Global.getCursor().getDocument().replaceText("abcd")
+        Global.getCursor().moveTo(0, 2)
+        Global.getCursor().setSelection(TextPosition(0, 1), TextPosition(0, 3))
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_HOME, 0)
+
+        assertEquals(null, Global.getCursor().getSelectedText())
+        assertEquals(0, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun shiftEnd_growsSelectionToEndOfLine() {
+        Global.getCursor().getDocument().replaceText("abcd")
+        Global.getCursor().moveTo(0, 1)
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_END, InputEvent.SHIFT_DOWN_MASK)
+
+        assertEquals("bcd", Global.getCursor().getSelectedText())
+        assertEquals(4, Global.getCursor().getColumn())
+    }
+
+    @Test
     fun arrowKeys_insideViewport_doNotScrollThePane() {
         Global.getCursor().getDocument().replaceText((0 until 40).joinToString("\n") { "abcdefghij" })
         Global.getCursor().moveTo(1, 0)
