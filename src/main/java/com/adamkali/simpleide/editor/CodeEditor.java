@@ -414,6 +414,16 @@ public class CodeEditor extends JPanel implements Scrollable {
                     handleHomeEnd(e, e.getKeyCode());
                     ensureCursorVisible();
                     break;
+                case KeyEvent.VK_A:
+                    if (isMenuShortcut(e)) {
+                        var cursor = Global.getCursor();
+                        cursor.clearSelection();
+                        cursor.moveTo(0, 0);
+                        cursor.moveAndSelect(cursor::moveToEndOfDocument);
+                        e.consume();
+                        ensureCursorVisible();
+                    }
+                    break;
 
                 case KeyEvent.VK_D:
                     if (isDown(KeyEvent.VK_CONTROL)) {

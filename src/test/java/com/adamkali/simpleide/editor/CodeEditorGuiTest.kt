@@ -505,6 +505,57 @@ class CodeEditorGuiTest {
     }
 
     @Test
+    fun ctrlA_selectsEntireDocumentAndMovesCaretToEnd() {
+        Global.getCursor().getDocument().replaceText("abc\ndef")
+        Global.getCursor().moveTo(0, 1)
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_A, InputEvent.CTRL_DOWN_MASK)
+
+        val text = Global.getCursor().getDocument().toText()
+        assertEquals(text, Global.getCursor().getSelectedText())
+        assertEquals("abc\ndef", text)
+        assertEquals(1, Global.getCursor().getLine())
+        assertEquals(3, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun metaA_selectsEntireDocumentAndMovesCaretToEnd() {
+        Global.getCursor().getDocument().replaceText("abc\ndef")
+        Global.getCursor().moveTo(0, 1)
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_A, InputEvent.META_DOWN_MASK)
+
+        val text = Global.getCursor().getDocument().toText()
+        assertEquals(text, Global.getCursor().getSelectedText())
+        assertEquals("abc\ndef", text)
+        assertEquals(1, Global.getCursor().getLine())
+        assertEquals(3, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun ctrlA_thenType_replacesEntireBuffer() {
+        Global.getCursor().getDocument().replaceText("abc\ndef")
+        Global.getCursor().moveTo(0, 1)
+
+        val editor = CodeEditor()
+        dispatchShortcut(editor, KeyEvent.VK_A, InputEvent.CTRL_DOWN_MASK)
+        val typed = KeyEvent(
+            editor,
+            KeyEvent.KEY_TYPED,
+            System.currentTimeMillis(),
+            0,
+            KeyEvent.VK_UNDEFINED,
+            'X'
+        )
+        editor.keyListeners.forEach { it.keyTyped(typed) }
+
+        assertEquals("X", Global.getCursor().getDocument().toText())
+        assertEquals(null, Global.getCursor().getSelectedText())
+        assertEquals(0, Global.getCursor().getLine())
+        assertEquals(1, Global.getCursor().getColumn())
+    }
+
+    @Test
     fun arrowKeys_insideViewport_doNotScrollThePane() {
         Global.getCursor().getDocument().replaceText((0 until 40).joinToString("\n") { "abcdefghij" })
         Global.getCursor().moveTo(1, 0)
