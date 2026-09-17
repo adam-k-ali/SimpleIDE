@@ -4,6 +4,7 @@ import com.adamkali.simpleide.Global
 import com.adamkali.simpleide.editor.io.Document
 import com.adamkali.simpleide.editor.io.EditorCursor
 import com.adamkali.simpleide.editor.io.OpenFile
+import com.adamkali.simpleide.preferences.RecentProjects
 import com.adamkali.simpleide.project.ProjectManager
 import com.adamkali.simpleide.testsupport.GuiRender
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -14,6 +15,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
 import java.nio.file.Paths
+import javax.swing.JButton
+import javax.swing.JLabel
 
 class HomeScreenGuiTest {
     private val sampleProject = Paths.get("src/main/resources/testproject")
@@ -23,6 +26,7 @@ class HomeScreenGuiTest {
         Global.setCursor(EditorCursor(Document(), 0, 0))
         OpenFile.reset()
         ProjectManager.reset()
+        RecentProjects.useTempStore()
     }
 
     @Test
@@ -103,5 +107,73 @@ class HomeScreenGuiTest {
         assertNull(ProjectManager.activeProject)
         assertTrue(errors.isNotEmpty(), "invalid name should show an error")
         assertEquals(0, Files.list(parent).use { it.count() })
+    }
+
+    @Test
+    fun emptyRecents_omitsRecentSection() {
+        val home = HomeScreen()
+        home.setSize(800, 600)
+        home.doLayout()
+
+        assertTrue(home.recentButtons.isEmpty())
+        assertNull(home.recentsLabel.parent)
+        GuiRender.render(home, 800, 600)
+    }
+
+    @Test
+    fun recentButtons_showSeededProjects_andClickLoads() {
+        val other = Files.createTempDirectory("simpleide-home-other-")
+        other.toFile().deleteOnExit()
+        Files.createDirectories(other.resolve(".simple"))
+        Files.writeString(
+            other.resolve(".simple").resolve("Other.proj"),
+            """{"projectName":"Other","sourcePaths":["src"]}"""
+        )
+
+        RecentProjects.record(other, "Other")
+        RecentProjects.record(sampleProject, "TestProject")
+
+        var ready = false
+        val home = HomeScreen()
+        home.onProjectReady = { ready = true }
+        home.setSize(800, 600)
+        home.doLayout()
+
+        assertEquals(listOf("TestProject", "Other"), home.recentButtons.map { recentName(it) })
+        assertEquals("Recent", home.recentsLabel.text)
+        assertTrue(home.recentsLabel.parent != null)
+
+        home.recentButtons[0].doClick()
+
+        assertTrue(ready)
+        assertEquals("TestProject", ProjectManager.activeProject?.getProjectName())
+        GuiRender.render(home, 800, 600)
+    }
+
+    @Test
+    fun missingRecent_showsErrorAndDropsEntry() {
+        val missing = Paths.get("/definitely/not/a/simpleide/project")
+        RecentProjects.record(missing, "Gone")
+
+        var ready = false
+        val errors = mutableListOf<String>()
+        val home = HomeScreen()
+        home.showError = { _, message -> errors.add(message) }
+        home.onProjectReady = { ready = true }
+
+        assertEquals(1, home.recentButtons.size)
+        home.recentButtons[0].doClick()
+
+        assertFalse(ready)
+        assertNull(ProjectManager.activeProject)
+        assertTrue(errors.isNotEmpty(), "missing recent should show an error")
+        assertTrue(RecentProjects.list().isEmpty())
+        assertTrue(home.recentButtons.isEmpty())
+        assertNull(home.recentsLabel.parent)
+    }
+
+    private fun recentName(button: JButton): String {
+        val labels = button.components.filterIsInstance<JLabel>()
+        return labels.first().text
     }
 }

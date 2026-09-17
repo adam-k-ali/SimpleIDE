@@ -1,5 +1,6 @@
 package com.adamkali.simpleide.project
 
+import com.adamkali.simpleide.preferences.RecentProjects
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -14,6 +15,7 @@ class ProjectManagerTest {
     @BeforeEach
     fun setUp() {
         ProjectManager.reset()
+        RecentProjects.useTempStore()
     }
 
     @Test
@@ -33,6 +35,10 @@ class ProjectManagerTest {
         assertEquals("src", folders[0].getName())
         assertTrue(folders[0].sourceFiles.isEmpty())
         assertTrue(folders[0].sourcePackages.isEmpty())
+        val recents = RecentProjects.list()
+        assertEquals(1, recents.size)
+        assertEquals("Demo", recents[0].name)
+        assertEquals(dest.toAbsolutePath().normalize(), recents[0].path.toAbsolutePath().normalize())
     }
 
     @Test
@@ -90,6 +96,9 @@ class ProjectManagerTest {
         ProjectManager.load(dest)
         val folders = ProjectManager.activeProject!!.sourceFolders
         assertEquals(listOf("src"), folders.map { it.getName() })
+        val recents = RecentProjects.list()
+        assertEquals("Loaded", recents.first().name)
+        assertEquals(dest.toAbsolutePath().normalize(), recents.first().path.toAbsolutePath().normalize())
     }
 
     @Test
@@ -147,6 +156,7 @@ class ProjectManagerTest {
         }
         assertTrue(error.message!!.contains("exactly one"), error.message)
         assertEquals(null, ProjectManager.activeProject)
+        assertTrue(RecentProjects.list().isEmpty())
     }
 
     @Test
@@ -159,6 +169,7 @@ class ProjectManagerTest {
         }
         assertTrue(error.message!!.contains("not a directory"), error.message)
         assertEquals(null, ProjectManager.activeProject)
+        assertTrue(RecentProjects.list().isEmpty())
     }
 
     private fun tempDir(): Path = Files.createTempDirectory("simpleide-project-").also {
