@@ -350,6 +350,24 @@ public class CodeEditor extends JPanel implements Scrollable {
             e.consume();
         }
 
+        private void handleHomeEnd(KeyEvent e, int keyCode) {
+            var cursor = Global.getCursor();
+            boolean menu = isMenuShortcut(e);
+            Runnable move;
+            if (keyCode == KeyEvent.VK_HOME) {
+                move = menu ? cursor::moveToStartOfDocument : cursor::moveToStartOfLine;
+            } else {
+                move = menu ? cursor::moveToEndOfDocument : cursor::moveToEndOfLine;
+            }
+            if (isShift(e)) {
+                cursor.moveAndSelect(move);
+            } else {
+                cursor.clearSelection();
+                move.run();
+            }
+            e.consume();
+        }
+
         @Override
         public void keyTyped(KeyEvent e) {
             if (isMenuShortcut(e) || e.getKeyChar() == KeyEvent.CHAR_UNDEFINED) {
@@ -389,6 +407,11 @@ public class CodeEditor extends JPanel implements Scrollable {
                 case KeyEvent.VK_UP:
                 case KeyEvent.VK_DOWN:
                     handleArrow(e, e.getKeyCode());
+                    ensureCursorVisible();
+                    break;
+                case KeyEvent.VK_HOME:
+                case KeyEvent.VK_END:
+                    handleHomeEnd(e, e.getKeyCode());
                     ensureCursorVisible();
                     break;
 
