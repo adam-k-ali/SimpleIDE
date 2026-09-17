@@ -4,7 +4,9 @@ import com.adamkali.simpleide.Global
 import com.adamkali.simpleide.editor.io.Document
 import com.adamkali.simpleide.editor.io.EditorCursor
 import com.adamkali.simpleide.editor.io.OpenFile
+import com.adamkali.simpleide.editor.io.TextPosition
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -51,5 +53,18 @@ class DeleteActionTest {
         assertEquals("abc", Global.getCursor().getDocument().getLine(0).toString())
         assertEquals(0, Global.getCursor().getLine())
         assertEquals(3, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun delete_replacesSelection() {
+        "abcd".forEach { ActionsList.TYPE_CHARACTER.execute(it) }
+        Global.getCursor().setSelection(TextPosition(0, 1), TextPosition(0, 3))
+
+        ActionsList.DELETE.execute()
+
+        assertEquals("ad", Global.getCursor().getDocument().getLine(0).toString())
+        assertEquals(0, Global.getCursor().getLine())
+        assertEquals(1, Global.getCursor().getColumn())
+        assertNull(Global.getCursor().getSelectedText())
     }
 }

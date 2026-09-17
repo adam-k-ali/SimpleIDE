@@ -14,6 +14,7 @@ import com.adamkali.simpleide.preferences.ThemeData
 import com.adamkali.simpleide.testsupport.GuiRender
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -311,6 +312,52 @@ class CodeEditorGuiTest {
     }
 
     @Test
+    fun typeKey_replacesShiftSelection() {
+        Global.getCursor().getDocument().replaceText("abcd")
+        Global.getCursor().moveTo(0, 1)
+
+        val editor = CodeEditor()
+        dispatchShortcut(editor, KeyEvent.VK_RIGHT, InputEvent.SHIFT_DOWN_MASK)
+        typeKey(editor, 'X')
+
+        assertEquals("aXcd", Global.getCursor().getDocument().getLine(0).toString())
+        assertEquals(2, Global.getCursor().getColumn())
+        assertNull(Global.getCursor().getSelectedText())
+    }
+
+    @Test
+    fun deleteKey_deletesShiftSelection() {
+        Global.getCursor().getDocument().replaceText("abcd")
+        Global.getCursor().moveTo(0, 1)
+
+        val editor = CodeEditor()
+        dispatchShortcut(editor, KeyEvent.VK_RIGHT, InputEvent.SHIFT_DOWN_MASK)
+        typeKey(editor, KeyEvent.VK_DELETE.toChar())
+
+        assertEquals("acd", Global.getCursor().getDocument().getLine(0).toString())
+        assertEquals(1, Global.getCursor().getColumn())
+        assertNull(Global.getCursor().getSelectedText())
+    }
+
+    @Test
+    fun backspace_deletesDraggedSelection() {
+        "abcd".forEach { ActionsList.TYPE_CHARACTER.execute(it) }
+
+        val editor = CodeEditor()
+        editor.setSize(400, 120)
+        val startX = EditorCoordinates.cursorX("a", Global::getStringWidth)
+        val endX = EditorCoordinates.cursorX("abc", Global::getStringWidth)
+        val y = EditorCoordinates.lineTop(0, Global.getLineHeight()) + 4
+
+        GuiRender.drag(editor, startX, y, endX, y)
+        typeKey(editor, KeyEvent.VK_BACK_SPACE.toChar())
+
+        assertEquals("ad", Global.getCursor().getDocument().getLine(0).toString())
+        assertEquals(1, Global.getCursor().getColumn())
+        assertNull(Global.getCursor().getSelectedText())
+    }
+
+    @Test
     fun shiftDown_extendsSelectionToNextLine() {
         Global.getCursor().getDocument().replaceText("ab\ncd")
         Global.getCursor().moveTo(0, 1)
@@ -517,5 +564,17 @@ class CodeEditorGuiTest {
             KeyEvent.CHAR_UNDEFINED
         )
         editor.keyListeners.forEach { it.keyPressed(event) }
+    }
+
+    private fun typeKey(editor: CodeEditor, keyChar: Char) {
+        val event = KeyEvent(
+            editor,
+            KeyEvent.KEY_TYPED,
+            System.currentTimeMillis(),
+            0,
+            KeyEvent.VK_UNDEFINED,
+            keyChar
+        )
+        editor.keyListeners.forEach { it.keyTyped(event) }
     }
 }

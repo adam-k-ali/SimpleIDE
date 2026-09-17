@@ -8,6 +8,8 @@ import com.adamkali.simpleide.Global;
 public class NewLineAction extends Action {
     @Override
     public void execute(Object... args) {
+        Global.getCursor().deleteSelection();
+
         String textBeforeCursor = Global.getCursor().getDocument().getLine(Global.getCursor().getLine()).substring(0, Global.getCursor().getColumn());
         String textAfterCursor = Global.getCursor().getDocument().getLine(Global.getCursor().getLine()).substring(Global.getCursor().getColumn(), Global.getCursor().getDocument().getLine(Global.getCursor().getLine()).length());
 
