@@ -45,8 +45,9 @@ The launch config sets `cwd` to `${workspaceFolder}` and compiles with Maven fir
 
 ## Features
 
-- Home Screen at startup: **Open Project** (choose a `.proj` file) or **New Project** (name + parent folder)
-- New Project writes `Name/Name.proj` (`projectName` + `sourcePaths: ["src"]`) and an empty `src/` directory, then opens the editor
+- Home Screen at startup: **Open Project** (choose a folder) or **New Project** (name + parent folder)
+- Open Project initializes `.simple/{folderName}.proj` when the folder is not yet a SimpleIDE project
+- New Project writes `Name/.simple/Name.proj` (`projectName` + `sourcePaths: ["src"]`) and an empty `src/` directory, then opens the editor
 - Project tree (left) and code editor (right), with a line/column status bar
 - Typing, Enter, Backspace, Tab (inserted as 4 spaces), arrow keys
 - Click a file in the project tree to open it in the editor
@@ -55,7 +56,7 @@ The launch config sets `cwd` to `${workspaceFolder}` and compiles with Maven fir
 - Ctrl+D to duplicate the current line
 - Java-like syntax highlighting via a custom lexer
 - Current-line highlight from `src/main/resources/preferences/editor-theme.json`
-- Sample project at `src/main/resources/testproject/` (`TestProject.proj`); open it from the Home Screen
+- Sample project at `src/main/resources/testproject/` (`.simple/TestProject.proj`); open the folder from the Home Screen
 
 ## Layout
 
@@ -64,7 +65,7 @@ The launch config sets `cwd` to `${workspaceFolder}` and compiles with Maven fir
 | `window/` | Frame, home screen, editor panel, status panel |
 | `editor/` | Code editor, coordinates, input |
 | `editor/io/` | Document, lines, cursor, edit actions, theme loader |
-| `project/` | `.proj` load, create/save, and source tree |
+| `project/` | `.simple` project folders, `.proj` JSON, and source tree |
 | `project/lang/` | Lexer and token types used for highlighting |
 | `browser/` | Project tree UI |
 | `preferences/` | Editor colors and theme data |
@@ -73,6 +74,8 @@ The launch config sets `cwd` to `${workspaceFolder}` and compiles with Maven fir
 
 - The app does not compile or run the open project.
 - After a project is open, there is no File menu to open or create another one; restart the app to return to the Home Screen.
+
+A sequenced plan to close these gaps (edit correctness, project session, undo/find, multi-file tabs, lexer, compile/run) is in [ROADMAP.md](ROADMAP.md).
 
 ## CI
 

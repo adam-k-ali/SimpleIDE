@@ -103,6 +103,18 @@ class Document {
     }
 
     /**
+     * Swaps the lines at [a] and [b].
+     */
+    fun swapLines(a: Int, b: Int) {
+        if (a < 0 || a >= lines.size || b < 0 || b >= lines.size) {
+            throw IndexOutOfBoundsException("Index out of bounds (a: $a, b: $b)")
+        }
+        val first = lines[a]
+        lines[a] = lines[b]
+        lines[b] = first
+    }
+
+    /**
      * Returns the number of lines in the document.
      * @return The number of lines in the document.
      */

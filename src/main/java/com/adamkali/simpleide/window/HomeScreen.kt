@@ -16,7 +16,6 @@ import javax.swing.JFileChooser
 import javax.swing.JLabel
 import javax.swing.JOptionPane
 import javax.swing.JPanel
-import javax.swing.filechooser.FileNameExtensionFilter
 
 data class NewProjectRequest(
     val parentDir: Path,
@@ -24,14 +23,14 @@ data class NewProjectRequest(
 )
 
 /**
- * Startup screen: open an existing `.proj` file or create a new project.
+ * Startup screen: open a project folder (creating `.simple` if needed) or create a new project.
  */
 class HomeScreen : JPanel() {
     val titleLabel = JLabel("SimpleIDE")
     val openButton = JButton("Open Project")
     val newButton = JButton("New Project")
 
-    var chooseProjectFile: () -> Path? = { defaultChooseProjectFile() }
+    var chooseProjectDir: () -> Path? = { defaultChooseProjectDir() }
     var chooseNewProject: () -> NewProjectRequest? = { defaultChooseNewProject() }
     var showError: (title: String, message: String) -> Unit = ::swingError
     var onProjectReady: () -> Unit = {}
@@ -69,7 +68,7 @@ class HomeScreen : JPanel() {
     }
 
     private fun openProject() {
-        val path = chooseProjectFile() ?: return
+        val path = chooseProjectDir() ?: return
         try {
             ProjectManager.load(path)
             onProjectReady()
@@ -88,10 +87,10 @@ class HomeScreen : JPanel() {
         }
     }
 
-    private fun defaultChooseProjectFile(): Path? {
+    private fun defaultChooseProjectDir(): Path? {
         val chooser = JFileChooser()
         chooser.dialogTitle = "Open Project"
-        chooser.fileFilter = FileNameExtensionFilter("SimpleIDE Project (*.proj)", "proj")
+        chooser.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
         val result = chooser.showOpenDialog(this)
         if (result != JFileChooser.APPROVE_OPTION) {
             return null

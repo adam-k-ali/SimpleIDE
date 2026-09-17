@@ -93,4 +93,27 @@ class Line {
         }
         return toString().substring(start, end)
     }
+
+    /**
+     * Column spans `[start, end)` of non-whitespace tokens on this line.
+     * Whitespace, tabs, and newline tokens are skipped as destinations.
+     */
+    fun tokenSpans(): List<TokenSpan> {
+        var column = 0
+        val spans = mutableListOf<TokenSpan>()
+        for (token in tokens) {
+            if (token is NewLineToken) {
+                break
+            }
+            val start = column
+            column += token.length()
+            if (token is WhitespaceToken || token is TabToken) {
+                continue
+            }
+            spans.add(TokenSpan(start, column))
+        }
+        return spans
+    }
 }
+
+data class TokenSpan(val start: Int, val end: Int)
