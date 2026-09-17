@@ -505,6 +505,76 @@ class CodeEditorGuiTest {
     }
 
     @Test
+    fun pageDown_fromLineZero_movesByViewportLineCount_andPans() {
+        Global.getCursor().getDocument().replaceText((0 until 80).joinToString("\n") { "line$it" })
+        Global.getCursor().moveTo(0, 0)
+
+        val (editor, scroll) = editorInScrollPane(400, 150)
+        val page = maxOf(1, editor.visibleRect.height / Global.getLineHeight())
+        val yBefore = scroll.viewport.viewPosition.y
+
+        editor.press(KeyEvent.VK_PAGE_DOWN)
+
+        assertEquals(page, Global.getCursor().getLine())
+        assertEquals(0, Global.getCursor().getColumn())
+        assertTrue(
+            scroll.viewport.viewPosition.y > yBefore,
+            "viewport should pan down after Page Down"
+        )
+    }
+
+    @Test
+    fun pageUp_fromLaterLine_movesBackByViewportLineCount() {
+        Global.getCursor().getDocument().replaceText((0 until 80).joinToString("\n") { "line$it" })
+
+        val (editor, _) = editorInScrollPane(400, 150)
+        val page = maxOf(1, editor.visibleRect.height / Global.getLineHeight())
+        val startLine = page * 2
+        Global.getCursor().moveTo(startLine, 0)
+
+        editor.press(KeyEvent.VK_PAGE_UP)
+
+        assertEquals(startLine - page, Global.getCursor().getLine())
+        assertEquals(0, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun pageDown_nearEnd_clampsToLastLine() {
+        Global.getCursor().getDocument().replaceText((0 until 5).joinToString("\n") { "line$it" })
+        Global.getCursor().moveTo(3, 0)
+
+        val (editor, _) = editorInScrollPane(400, 200)
+        editor.press(KeyEvent.VK_PAGE_DOWN)
+
+        assertEquals(4, Global.getCursor().getLine())
+    }
+
+    @Test
+    fun pageDown_clearsExistingSelection() {
+        Global.getCursor().getDocument().replaceText((0 until 10).joinToString("\n") { "abcd" })
+        Global.getCursor().moveTo(0, 2)
+        Global.getCursor().setSelection(TextPosition(0, 1), TextPosition(0, 3))
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_PAGE_DOWN, 0)
+
+        assertEquals(null, Global.getCursor().getSelectedText())
+        assertEquals(1, Global.getCursor().getLine())
+        assertEquals(2, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun shiftPageDown_growsMultiLineSelection() {
+        Global.getCursor().getDocument().replaceText((0 until 10).joinToString("\n") { "abcd" })
+        Global.getCursor().moveTo(0, 1)
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_PAGE_DOWN, InputEvent.SHIFT_DOWN_MASK)
+
+        assertEquals(1, Global.getCursor().getLine())
+        assertEquals(1, Global.getCursor().getColumn())
+        assertEquals("bcd\na", Global.getCursor().getSelectedText())
+    }
+
+    @Test
     fun arrowKeys_insideViewport_doNotScrollThePane() {
         Global.getCursor().getDocument().replaceText((0 until 40).joinToString("\n") { "abcdefghij" })
         Global.getCursor().moveTo(1, 0)
