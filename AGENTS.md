@@ -70,4 +70,4 @@ Theme load in tests also depends on CWD = repo root. Always redirect `RecentProj
 ## Sample data
 
 - Theme: `src/main/resources/preferences/editor-theme.json`
-- Sample project: `src/main/resources/testproject/` (`.simple/TestProject.proj` + `src/`)
+- Sample project: `src/main/resources/testproject/` (`.simple/TestProject.proj` + `src/` and `notes/` QA fixtures: large file, highlighter kitchen, nested packages)
