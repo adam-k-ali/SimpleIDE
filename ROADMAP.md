@@ -2,13 +2,13 @@
 
 SimpleIDE is a from-scratch Swing editor, not a clone of IntelliJ or VS Code. This roadmap is ordered by **what unblocks daily use**, then by **what makes it an IDE**. Later phases assume earlier ones; skip ahead only when a later item has no dependency.
 
-The north star is a small Java editor you can open a `.proj` in, edit several files without losing work, and compile/run from the same window.
+The north star is a small Java editor you can open a project folder in, edit several files without losing work, and compile/run from the same window.
 
 ## Where things stand today
 
 Working today (as of `main` after [#12](https://github.com/adam-k-ali/SimpleIDE/pull/12)):
 
-- Home Screen: open a `.proj` or create a new project (`src/` + `Name.proj`)
+- Home Screen: open a folder (creates `.simple/{folderName}.proj` if needed) or create a new project (`src/` + `.simple/Name.proj`)
 - Project tree, single-buffer editor, line/column status bar
 - Typing, Enter (copies indent), Backspace, Delete, Tab as 4 spaces
 - Mouse caret placement and drag selection
@@ -43,7 +43,7 @@ Architectural constraints that later features must respect or replace:
 1. **Stay from-scratch.** Prefer extending `editor/io/action/`, `Document`, `Lexer`, and the existing Swing chrome. Do not add LSP, a bundled JDK compiler UI framework, or a second editor widget.
 2. **Edit actions stay the source of truth.** New keyboard behavior is an `Action` registered in `ActionsList`, with a JUnit test, same as Delete / Copy / Save.
 3. **Tests before chrome.** Headless GUI tests via `GuiRender` for anything that paints or handles input. Reset `Global` / `OpenFile` / `ProjectManager` / theme in `@BeforeEach`.
-4. **One language first.** Java highlighting and `javac` for the open `.proj`. Kotlin-in-the-IDE is out of scope until Java edit/run is solid.
+4. **One language first.** Java highlighting and `javac` for the open project. Kotlin-in-the-IDE is out of scope until Java edit/run is solid.
 5. **Do not grow `editor.lang`.** Highlighting lives in `project.lang`. The leftover Java token tree mentioned in `AGENTS.md` is already gone from the tree; delete the warning when convenient.
 
 ---
@@ -75,7 +75,7 @@ Window and project:
 |------|--------|--------|
 | 1.1 | File menu (or Home Screen command): New Project, Open Project, Close Project | `AppWindow`, `HomeScreen`. Close returns to the Home Screen instead of `EXIT_ON_CLOSE` only |
 | 1.2 | Confirm discard on **window close** if `OpenFile.isDirty()` | `AppWindow` + `OpenFile.confirmIfDirty` (today the prompt only runs on open/reload) |
-| 1.3 | Recent projects on the Home Screen | Persist a short list next to the `.proj` (or in user prefs). Click to reopen |
+| 1.3 | Recent projects on the Home Screen | Persist a short list next to `.simple` (or in user prefs). Click to reopen |
 | 1.4 | Save As; allow saving an untitled buffer | `OpenFile` today no-ops `save()` when `path == null` |
 
 Project tree:

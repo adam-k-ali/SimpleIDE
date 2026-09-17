@@ -5,7 +5,6 @@ import com.adamkali.simpleide.window.AppWindow
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.stream.JsonReader
-import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
@@ -16,6 +15,8 @@ import java.nio.file.Paths
  * Also handles loading and saving projects
  */
 object ProjectManager {
+    private const val SIMPLE_DIR = ".simple"
+
     /** The active project */
     var activeProject: Project? = null
         private set(value) {
@@ -79,14 +80,21 @@ object ProjectManager {
     }
 
     /**
-     * Loads a project from the given path
-     * @param projectPath The path to the project file
+     * Loads a project from the given directory. The directory is the project root: it should
+     * contain a `.simple` folder (created if missing) with a `.proj` file (written from the
+     * folder name if none exists). Source paths are resolved relative to [projectDir], not
+     * `.simple`.
      */
-    fun load(projectPath: Path) {
-        val projectFile: ProjectFile = File(projectPath.toString()).reader().use { reader ->
+    fun load(projectDir: Path) {
+        if (!Files.isDirectory(projectDir)) {
+            throw IllegalArgumentException("Project path is not a directory")
+        }
+
+        val projPath = ensureProjFile(projectDir)
+        val projectFile: ProjectFile = Files.newBufferedReader(projPath, StandardCharsets.UTF_8).use { reader ->
             gson.fromJson(JsonReader(reader), ProjectFile::class.java)
         }
-        projectFile.rootPath = projectPath.parent.toString()
+        projectFile.rootPath = projectDir.toString()
 
         val project = Project(projectFile)
 
@@ -110,9 +118,9 @@ object ProjectManager {
     }
 
     /**
-     * Creates a new project folder under [parentDir], writes a `.proj` file and an empty `src/`
-     * directory, then loads it.
-     * @return the path to the new `.proj` file
+     * Creates a new project folder under [parentDir], writes `.simple/{name}.proj` and an empty
+     * `src/` directory, then loads it.
+     * @return the path to the new project directory
      */
     fun create(parentDir: Path, projectName: String): Path {
         val name = projectName.trim()
@@ -127,15 +135,56 @@ object ProjectManager {
         }
 
         Files.createDirectories(projectDir.resolve("src"))
-        val dest = projectDir.resolve("$name.proj")
+        writeNewProj(projectDir, name)
+        load(projectDir)
+        return projectDir
+    }
+
+    /**
+     * Ensures [projectDir] has a `.simple` directory and exactly one `.proj` file.
+     * Creates missing metadata using the folder name; does not create `src/`.
+     */
+    private fun ensureProjFile(projectDir: Path): Path {
+        val simpleDir = projectDir.resolve(SIMPLE_DIR)
+        if (Files.exists(simpleDir) && !Files.isDirectory(simpleDir)) {
+            throw IllegalArgumentException(".simple exists but is not a directory")
+        }
+        Files.createDirectories(simpleDir)
+
+        val projFiles = findProjFiles(simpleDir)
+        return when {
+            projFiles.isEmpty() -> {
+                val name = projectDir.fileName?.toString()
+                    ?: throw IllegalArgumentException("Project name is invalid")
+                validateProjectName(name)
+                writeNewProj(projectDir, name)
+            }
+            projFiles.size == 1 -> projFiles[0]
+            else -> throw IllegalArgumentException(
+                "Expected exactly one .proj file in .simple, found ${projFiles.size}"
+            )
+        }
+    }
+
+    private fun writeNewProj(projectDir: Path, name: String): Path {
+        val simpleDir = projectDir.resolve(SIMPLE_DIR)
+        Files.createDirectories(simpleDir)
+        val dest = simpleDir.resolve("$name.proj")
         val projectFile = ProjectFile(
             rootPath = projectDir.toString(),
             projectName = name,
             sourcePaths = arrayOf("src")
         )
         save(projectFile, dest)
-        load(dest)
         return dest
+    }
+
+    private fun findProjFiles(simpleDir: Path): List<Path> {
+        Files.newDirectoryStream(simpleDir).use { entries ->
+            return entries
+                .filter { Files.isRegularFile(it) && it.fileName.toString().endsWith(".proj") }
+                .sortedBy { it.fileName.toString() }
+        }
     }
 
     private fun validateProjectName(name: String) {

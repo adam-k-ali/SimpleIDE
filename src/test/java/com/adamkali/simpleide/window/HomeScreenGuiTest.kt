@@ -16,7 +16,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 class HomeScreenGuiTest {
-    private val sampleProject = Paths.get("src/main/resources/testproject/TestProject.proj")
+    private val sampleProject = Paths.get("src/main/resources/testproject")
 
     @BeforeEach
     fun setUp() {
@@ -41,10 +41,10 @@ class HomeScreenGuiTest {
     }
 
     @Test
-    fun openProject_loadsChosenFileAndInvokesReady() {
+    fun openProject_loadsChosenDirAndInvokesReady() {
         var ready = false
         val home = HomeScreen()
-        home.chooseProjectFile = { sampleProject }
+        home.chooseProjectDir = { sampleProject }
         home.onProjectReady = { ready = true }
 
         home.openButton.doClick()
@@ -67,7 +67,7 @@ class HomeScreenGuiTest {
 
         assertTrue(ready)
         val projectDir = parent.resolve("Fresh")
-        assertTrue(Files.isRegularFile(projectDir.resolve("Fresh.proj")))
+        assertTrue(Files.isRegularFile(projectDir.resolve(".simple").resolve("Fresh.proj")))
         assertTrue(Files.isDirectory(projectDir.resolve("src")))
         assertEquals("Fresh", ProjectManager.activeProject?.getProjectName())
     }
@@ -76,7 +76,7 @@ class HomeScreenGuiTest {
     fun cancelOpen_doesNotLoadAProject() {
         var ready = false
         val home = HomeScreen()
-        home.chooseProjectFile = { null }
+        home.chooseProjectDir = { null }
         home.onProjectReady = { ready = true }
 
         home.openButton.doClick()

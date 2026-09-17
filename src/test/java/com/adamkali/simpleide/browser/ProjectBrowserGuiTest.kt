@@ -69,6 +69,6 @@ class ProjectBrowserGuiTest {
     }
 
     companion object {
-        private val SAMPLE_PROJECT = Paths.get("src/main/resources/testproject/TestProject.proj")
+        private val SAMPLE_PROJECT = Paths.get("src/main/resources/testproject")
     }
 }
