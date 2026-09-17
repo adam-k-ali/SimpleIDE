@@ -6,6 +6,7 @@ import com.adamkali.simpleide.editor.io.Document
 import com.adamkali.simpleide.editor.io.EditorCursor
 import com.adamkali.simpleide.editor.io.OpenFile
 import com.adamkali.simpleide.editor.io.UnsavedChoice
+import com.adamkali.simpleide.preferences.RecentProjects
 import com.adamkali.simpleide.project.ProjectManager
 import com.adamkali.simpleide.testsupport.GuiRender
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -23,6 +24,7 @@ class EditorPanelGuiTest {
         OpenFile.showError = { _, _ -> }
         OpenFile.prompt = { UnsavedChoice.DISCARD }
         ProjectManager.reset()
+        RecentProjects.useTempStore()
     }
 
     @Test

@@ -34,7 +34,8 @@ mvn --batch-mode test
 | Project load / create / `.simple` + `.proj` JSON | `project/ProjectManager.kt`, `project/ProjectFile.kt` |
 | Open / save / reload source files | `editor/io/OpenFile.kt`, `editor/io/Document.kt` |
 | Project tree UI | `browser/`, `browser/components/` |
-| Home Screen (open / new project) | `window/HomeScreen.kt`, `window/AppWindow.kt` |
+| Home Screen (open / new / recents) | `window/HomeScreen.kt`, `window/AppWindow.kt` |
+| Recent projects / user config dir | `preferences/AppPaths.kt`, `preferences/RecentProjects.kt`, `window/HomeScreen.kt` |
 | Window chrome | `window/AppWindow.kt`, `EditorPanel`, `StatusPanel` |
 | Theme JSON | `src/main/resources/preferences/editor-theme.json`, `editor/io/theme/ThemeLoader.kt` |
 | Shared cursor / font / theme | `Global.java` |
@@ -53,10 +54,11 @@ Functionality priorities and phase order: [ROADMAP.md](ROADMAP.md).
 Global.setCursor(EditorCursor(Document(), 0, 0))
 OpenFile.reset()
 ProjectManager.reset()
+RecentProjects.useTempStore()
 Global.setTheme(ThemeData(ThemeLoader.load("src/main/resources/preferences/editor-theme.json")))
 ```
 
-Theme load in tests also depends on CWD = repo root.
+Theme load in tests also depends on CWD = repo root. Always redirect `RecentProjects` to a temp file before `ProjectManager.load` / `create` or constructing `HomeScreen`, so tests do not write to the real Application Support / APPDATA folder.
 
 ## Conventions
 

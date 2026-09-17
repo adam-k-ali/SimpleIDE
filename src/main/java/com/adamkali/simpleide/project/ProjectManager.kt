@@ -1,6 +1,7 @@
 package com.adamkali.simpleide.project
 
 import com.adamkali.simpleide.activity.ProjectActivityListener
+import com.adamkali.simpleide.preferences.RecentProjects
 import com.adamkali.simpleide.window.AppWindow
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -104,6 +105,7 @@ object ProjectManager {
         }
 
         activeProject = project
+        RecentProjects.record(projectDir, projectFile.projectName)
         for (callback in callbacks) {
             callback.onProjectLoad(project)
         }
