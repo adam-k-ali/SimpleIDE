@@ -355,7 +355,6 @@ public class CodeEditor extends JPanel implements Scrollable {
             if (isMenuShortcut(e) || e.getKeyChar() == KeyEvent.CHAR_UNDEFINED) {
                 return;
             }
-            Global.getCursor().clearSelection();
             switch (e.getKeyChar()) {
                 case KeyEvent.VK_ENTER:
                     ActionsList.NEW_LINE.execute();

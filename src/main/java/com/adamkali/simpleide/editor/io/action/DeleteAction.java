@@ -5,6 +5,10 @@ import com.adamkali.simpleide.Global;
 public class DeleteAction extends Action {
     @Override
     public void execute(Object... args) {
+        if (Global.getCursor().deleteSelection()) {
+            return;
+        }
+
         String textBeforeCursor = Global.getCursor().getTextBeforeCursor();
         String textAfterCursor = Global.getCursor().getTextAfterCursor();
 

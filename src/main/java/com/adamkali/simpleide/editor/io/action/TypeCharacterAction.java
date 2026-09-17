@@ -12,10 +12,7 @@ public class TypeCharacterAction extends Action {
             throw new IllegalArgumentException("TypeCharacterAction requires a Character argument");
         }
 
-        String textBeforeCursor = Global.getCursor().getTextBeforeCursor();
-        String textAfterCursor = Global.getCursor().getTextAfterCursor();
-
-        Global.getCursor().getDocument().getLine(Global.getCursor().getLine()).rewrite(textBeforeCursor + args[0] + textAfterCursor);
-        Global.getCursor().moveRight();
+        Global.getCursor().deleteSelection();
+        Global.getCursor().insertText(String.valueOf((Character) args[0]));
     }
 }

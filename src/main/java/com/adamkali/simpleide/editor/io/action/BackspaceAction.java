@@ -5,6 +5,10 @@ import com.adamkali.simpleide.Global;
 public class BackspaceAction extends Action {
     @Override
     public void execute(Object... args) {
+        if (Global.getCursor().deleteSelection()) {
+            return;
+        }
+
         // Don't allow backspace if we're on the first, empty line.
         if (Global.getCursor().getColumn() == 0 && Global.getCursor().getLine() == 0) {
             return;
