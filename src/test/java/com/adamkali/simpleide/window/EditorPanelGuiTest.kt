@@ -30,7 +30,7 @@ class EditorPanelGuiTest {
     @Test
     fun expandingFolder_doesNotChangeBrowserOrEditorColumnWidths() {
         val panel = EditorPanel()
-        ProjectManager.load(Paths.get("src/main/resources/testproject"))
+        ProjectManager.load(SAMPLE_PROJECT)
         panel.setSize(800, 600)
         panel.doLayout()
 
@@ -57,7 +57,7 @@ class EditorPanelGuiTest {
     @Test
     fun activityBar_togglesSidebarVisibility() {
         val panel = EditorPanel()
-        ProjectManager.load(Paths.get("src/main/resources/testproject"))
+        ProjectManager.load(SAMPLE_PROJECT)
         panel.setSize(800, 600)
         panel.doLayout()
 
@@ -83,11 +83,39 @@ class EditorPanelGuiTest {
     @Test
     fun tabBar_showsOpenedFileName() {
         val panel = EditorPanel()
-        ProjectManager.load(Paths.get("src/main/resources/testproject"))
+        ProjectManager.load(SAMPLE_PROJECT)
         assertEquals("Untitled", panel.editorTabBar.displayedTitle())
 
-        assertTrue(OpenFile.open(Paths.get("src/main/resources/testproject/src/test/Main.java")))
+        assertTrue(OpenFile.open(SAMPLE_PROJECT.resolve("src/test/Main.java")))
         panel.editorTabBar.refresh()
         assertEquals("Main.java", panel.editorTabBar.displayedTitle())
+    }
+
+    @Test
+    fun openingLargeFile_loadsThousandsOfLines() {
+        val panel = EditorPanel()
+        ProjectManager.load(SAMPLE_PROJECT)
+        assertTrue(OpenFile.open(SAMPLE_PROJECT.resolve("src/LargeFile.java")))
+        panel.editorTabBar.refresh()
+
+        val lineCount = Global.getCursor().getDocument().getLineCount()
+        assertTrue(lineCount >= 1000, "LargeFile.java should load thousands of lines, was $lineCount")
+        assertEquals("LargeFile.java", panel.editorTabBar.displayedTitle())
+    }
+
+    @Test
+    fun openingNotesReadme_loadsContents() {
+        val panel = EditorPanel()
+        ProjectManager.load(SAMPLE_PROJECT)
+        assertTrue(OpenFile.open(SAMPLE_PROJECT.resolve("notes/README.md")))
+        panel.editorTabBar.refresh()
+
+        val text = Global.getCursor().getDocument().toText()
+        assertTrue(text.contains("TestProject notes"), "opened README.md should load notes contents, was: $text")
+        assertEquals("README.md", panel.editorTabBar.displayedTitle())
+    }
+
+    companion object {
+        private val SAMPLE_PROJECT = Paths.get("src/main/resources/testproject")
     }
 }
