@@ -9,6 +9,7 @@ import java.awt.Graphics
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import javax.swing.JComponent
+import javax.swing.SwingUtilities
 
 class FolderButton(private val folder: SourcePackage) : JComponent() {
     /** Whether the folder is selected.  */
@@ -34,6 +35,8 @@ class FolderButton(private val folder: SourcePackage) : JComponent() {
 
     var onDroppedChanged: (() -> Unit)? = null
 
+    var onPopup: ((MouseEvent) -> Unit)? = null
+
     private var hovered = false
 
     fun getText(): String {
@@ -48,8 +51,19 @@ class FolderButton(private val folder: SourcePackage) : JComponent() {
         alignmentX = Component.LEFT_ALIGNMENT
         addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
+                if (!SwingUtilities.isLeftMouseButton(e) || e.isPopupTrigger) {
+                    return
+                }
                 dropped = !dropped
                 onDroppedChanged?.invoke()
+            }
+
+            override fun mousePressed(e: MouseEvent) {
+                maybePopup(e)
+            }
+
+            override fun mouseReleased(e: MouseEvent) {
+                maybePopup(e)
             }
 
             override fun mouseEntered(e: MouseEvent) {
@@ -60,6 +74,12 @@ class FolderButton(private val folder: SourcePackage) : JComponent() {
             override fun mouseExited(e: MouseEvent) {
                 hovered = false
                 repaint()
+            }
+
+            private fun maybePopup(e: MouseEvent) {
+                if (e.isPopupTrigger) {
+                    onPopup?.invoke(e)
+                }
             }
         })
     }

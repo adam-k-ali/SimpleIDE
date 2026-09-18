@@ -39,6 +39,48 @@ object GuiRender {
         )
     }
 
+    fun popup(component: JComponent, x: Int = 2, y: Int = 2) {
+        component.dispatchEvent(
+            MouseEvent(
+                component,
+                MouseEvent.MOUSE_PRESSED,
+                System.currentTimeMillis(),
+                InputEvent.BUTTON3_DOWN_MASK,
+                x,
+                y,
+                1,
+                true,
+                MouseEvent.BUTTON3
+            )
+        )
+        component.dispatchEvent(
+            MouseEvent(
+                component,
+                MouseEvent.MOUSE_RELEASED,
+                System.currentTimeMillis(),
+                0,
+                x,
+                y,
+                1,
+                false,
+                MouseEvent.BUTTON3
+            )
+        )
+        component.dispatchEvent(
+            MouseEvent(
+                component,
+                MouseEvent.MOUSE_CLICKED,
+                System.currentTimeMillis(),
+                0,
+                x,
+                y,
+                1,
+                false,
+                MouseEvent.BUTTON3
+            )
+        )
+    }
+
     fun drag(component: JComponent, x1: Int, y1: Int, x2: Int, y2: Int) {
         component.dispatchEvent(
             MouseEvent(component, MouseEvent.MOUSE_PRESSED, System.currentTimeMillis(), InputEvent.BUTTON1_DOWN_MASK, x1, y1, 1, false)

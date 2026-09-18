@@ -98,7 +98,79 @@ class OpenFileTest {
     }
 
     @Test
+    fun untitledBuffer_isDirtyAfterTyping() {
+        assertFalse(OpenFile.isDirty())
+        ActionsList.TYPE_CHARACTER.execute('x')
+        assertTrue(OpenFile.isDirty())
+        assertEquals(null, OpenFile.path)
+    }
+
+    @Test
+    fun save_untitledBuffer_writesChosenPath() {
+        ActionsList.TYPE_CHARACTER.execute('x')
+        val dest = Files.createTempFile("simpleide-untitled-save-", ".txt")
+        dest.toFile().deleteOnExit()
+        Files.delete(dest)
+        OpenFile.chooseSavePath = { dest }
+
+        assertTrue(OpenFile.save())
+        assertEquals(dest, OpenFile.path)
+        assertFalse(OpenFile.isDirty())
+        assertEquals("x", Files.readString(dest, StandardCharsets.UTF_8))
+    }
+
+    @Test
+    fun saveOrSaveAs_whenChooserCancelled_isANoOp() {
+        OpenFile.chooseSavePath = { null }
+        ActionsList.TYPE_CHARACTER.execute('x')
+
+        assertFalse(OpenFile.save())
+        assertFalse(OpenFile.saveAs())
+        assertEquals(null, OpenFile.path)
+        assertTrue(OpenFile.isDirty())
+    }
+
+    @Test
+    fun reload_withNoOpenFile_isANoOp() {
+        assertFalse(OpenFile.reload())
+    }
+
+    @Test
+    fun saveAs_switchesPathAndWritesTheNewFile() {
+        val original = tempFile("hello")
+        assertTrue(OpenFile.open(original))
+        ActionsList.TYPE_CHARACTER.execute('!')
+        val dest = Files.createTempFile("simpleide-save-as-", ".txt")
+        dest.toFile().deleteOnExit()
+        Files.delete(dest)
+        OpenFile.chooseSavePath = { dest }
+
+        assertTrue(OpenFile.saveAs())
+        assertEquals(dest, OpenFile.path)
+        assertFalse(OpenFile.isDirty())
+        assertEquals("!hello", Files.readString(dest, StandardCharsets.UTF_8))
+        assertEquals("hello", Files.readString(original, StandardCharsets.UTF_8))
+    }
+
+    @Test
+    fun dirtyUntitledSave_writesThenOpensTheOtherFile() {
+        ActionsList.TYPE_CHARACTER.execute('z')
+        val dest = Files.createTempFile("simpleide-untitled-dirty-", ".txt")
+        dest.toFile().deleteOnExit()
+        Files.delete(dest)
+        OpenFile.chooseSavePath = { dest }
+        OpenFile.prompt = { UnsavedChoice.SAVE }
+        val other = tempFile("bbb")
+
+        assertTrue(OpenFile.open(other))
+        assertEquals(other, OpenFile.path)
+        assertEquals("bbb", Global.getCursor().getDocument().toText())
+        assertEquals("z", Files.readString(dest, StandardCharsets.UTF_8))
+    }
+
+    @Test
     fun saveOrReload_withNoOpenFile_isANoOp() {
+        OpenFile.chooseSavePath = { null }
         assertFalse(OpenFile.save())
         assertFalse(OpenFile.reload())
     }
@@ -107,6 +179,7 @@ class OpenFileTest {
     fun missingFile_doesNotSwapTheBuffer() {
         val errors = mutableListOf<String>()
         OpenFile.showError = { _, message -> errors.add(message) }
+        OpenFile.prompt = { UnsavedChoice.DISCARD }
         Global.getCursor().getDocument().replaceText("keep me")
 
         assertFalse(OpenFile.open(Files.createTempDirectory("simpleide-missing").resolve("nope.txt")))

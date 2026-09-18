@@ -185,6 +185,69 @@ class CodeEditorGuiTest {
     }
 
     @Test
+    fun ctrlS_savesUntitledBufferViaSaveAs() {
+        val dest = Files.createTempFile("simpleide-untitled-ctrl-s-", ".txt")
+        dest.toFile().deleteOnExit()
+        Files.delete(dest)
+        OpenFile.chooseSavePath = { dest }
+        ActionsList.TYPE_CHARACTER.execute('a')
+        assertTrue(OpenFile.isDirty())
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK)
+
+        assertEquals(dest, OpenFile.path)
+        assertEquals("a", Files.readString(dest, StandardCharsets.UTF_8))
+        assertFalse(OpenFile.isDirty())
+    }
+
+    @Test
+    fun ctrlShiftS_savesAsNewPath() {
+        val original = Files.createTempFile("simpleide-save-as-original-", ".txt")
+        original.toFile().deleteOnExit()
+        Files.writeString(original, "hello", StandardCharsets.UTF_8)
+        assertTrue(OpenFile.open(original))
+        ActionsList.TYPE_CHARACTER.execute('!')
+        val dest = Files.createTempFile("simpleide-save-as-dest-", ".txt")
+        dest.toFile().deleteOnExit()
+        Files.delete(dest)
+        OpenFile.chooseSavePath = { dest }
+
+        dispatchShortcut(
+            CodeEditor(),
+            KeyEvent.VK_S,
+            InputEvent.CTRL_DOWN_MASK or InputEvent.SHIFT_DOWN_MASK
+        )
+
+        assertEquals(dest, OpenFile.path)
+        assertEquals("!hello", Files.readString(dest, StandardCharsets.UTF_8))
+        assertEquals("hello", Files.readString(original, StandardCharsets.UTF_8))
+        assertFalse(OpenFile.isDirty())
+    }
+
+    @Test
+    fun metaShiftS_savesAsNewPath() {
+        val original = Files.createTempFile("simpleide-save-as-meta-original-", ".txt")
+        original.toFile().deleteOnExit()
+        Files.writeString(original, "hello", StandardCharsets.UTF_8)
+        assertTrue(OpenFile.open(original))
+        ActionsList.TYPE_CHARACTER.execute('!')
+        val dest = Files.createTempFile("simpleide-save-as-meta-dest-", ".txt")
+        dest.toFile().deleteOnExit()
+        Files.delete(dest)
+        OpenFile.chooseSavePath = { dest }
+
+        dispatchShortcut(
+            CodeEditor(),
+            KeyEvent.VK_S,
+            InputEvent.META_DOWN_MASK or InputEvent.SHIFT_DOWN_MASK
+        )
+
+        assertEquals(dest, OpenFile.path)
+        assertEquals("!hello", Files.readString(dest, StandardCharsets.UTF_8))
+        assertEquals("hello", Files.readString(original, StandardCharsets.UTF_8))
+    }
+
+    @Test
     fun ctrlR_reloadsTheOpenFile() {
         val file = Files.createTempFile("simpleide-reload-", ".txt")
         file.toFile().deleteOnExit()

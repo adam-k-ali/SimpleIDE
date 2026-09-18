@@ -22,7 +22,7 @@ class EditorTabBar : JComponent() {
 
     fun displayedTitle(): String {
         val name = OpenFile.path?.fileName?.toString() ?: "Untitled"
-        return if (OpenFile.path != null && OpenFile.isDirty()) "● $name" else name
+        return if (OpenFile.isDirty()) "● $name" else name
     }
 
     fun refresh() {

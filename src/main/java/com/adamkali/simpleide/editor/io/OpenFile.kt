@@ -6,6 +6,7 @@ import com.adamkali.simpleide.window.AppWindow
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
+import javax.swing.JFileChooser
 import javax.swing.JOptionPane
 
 enum class UnsavedChoice {
@@ -27,12 +28,11 @@ object OpenFile {
 
     var showError: (title: String, message: String) -> Unit = ::swingError
 
+    var chooseSavePath: () -> Path? = ::swingChooseSavePath
+
     var onStateChanged: (() -> Unit)? = null
 
     fun isDirty(): Boolean {
-        if (path == null) {
-            return false
-        }
         return Global.getCursor().getDocument().toText() != snapshot
     }
 
@@ -41,6 +41,7 @@ object OpenFile {
         snapshot = ""
         prompt = ::swingPrompt
         showError = ::swingError
+        chooseSavePath = ::swingChooseSavePath
         onStateChanged = null
         notifyStateChanged()
     }
@@ -58,12 +59,28 @@ object OpenFile {
     }
 
     /**
-     * Writes the current buffer to the active path.
+     * Writes the current buffer to the active path, or Save As when untitled.
      * @return true if the file was written
      */
     fun save(): Boolean {
-        val target = path ?: return false
+        val target = path ?: return saveAs()
         return writeToDisk(target)
+    }
+
+    /**
+     * Prompts for a path, writes the current buffer there, and makes it the active file.
+     * @return true if the file was written
+     */
+    fun saveAs(): Boolean {
+        val target = chooseSavePath() ?: return false
+        val previous = path
+        path = target
+        if (!writeToDisk(target)) {
+            path = previous
+            updateTitle()
+            return false
+        }
+        return true
     }
 
     /**
@@ -136,6 +153,21 @@ object OpenFile {
 
     private fun notifyStateChanged() {
         onStateChanged?.invoke()
+    }
+
+    private fun swingChooseSavePath(): Path? {
+        val chooser = JFileChooser()
+        chooser.dialogTitle = "Save As"
+        chooser.fileSelectionMode = JFileChooser.FILES_ONLY
+        val startDir = ProjectManager.activeProject?.sourceFolders?.firstOrNull()?.getPath()?.toFile()
+        if (startDir != null && startDir.isDirectory) {
+            chooser.currentDirectory = startDir
+        }
+        val result = chooser.showSaveDialog(null)
+        if (result != JFileChooser.APPROVE_OPTION) {
+            return null
+        }
+        return chooser.selectedFile.toPath()
     }
 
     private fun swingPrompt(fileName: String): UnsavedChoice {

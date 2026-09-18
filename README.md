@@ -51,7 +51,8 @@ The launch config sets `cwd` to `${workspaceFolder}` and compiles with Maven fir
 - Project tree (left) and code editor (right), with a line/column status bar
 - Typing, Enter, Backspace, Tab (inserted as 4 spaces), arrow keys
 - Click a file in the project tree to open it in the editor
-- Ctrl/Cmd+S to save, Ctrl/Cmd+R to reload from disk (Save / Discard / Cancel if there are unsaved edits)
+- Right-click a folder in the project tree to create a **New File** or **New Folder**
+- Ctrl/Cmd+S to save (Save As when the buffer is untitled), Ctrl/Cmd+Shift+S Save As, Ctrl/Cmd+R to reload from disk (Save / Discard / Cancel if there are unsaved edits)
 - Mouse placement and drag selection
 - Ctrl+D to duplicate the current line
 - Java-like syntax highlighting via a custom lexer
