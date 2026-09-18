@@ -41,7 +41,7 @@ object AppWindow {
         frame.defaultCloseOperation = JFrame.DO_NOTHING_ON_CLOSE
         frame.addWindowListener(object : WindowAdapter() {
             override fun windowClosing(e: WindowEvent) {
-                if (handleWindowClosing(frame)) {
+                if (handleWindowClosing { frame.dispose() }) {
                     exitProcess(0)
                 }
             }
@@ -56,15 +56,15 @@ object AppWindow {
     }
 
     /**
-     * Prompts for unsaved changes, then disposes [window] if the caller may quit.
+     * Prompts for unsaved changes, then runs [closeWindow] if the caller may quit.
      * @return true if the window was closed
      */
-    fun handleWindowClosing(window: JFrame): Boolean {
+    fun handleWindowClosing(closeWindow: () -> Unit): Boolean {
         if (!OpenFile.confirmIfDirty()) {
             return false
         }
         editorTimer?.stop()
-        window.dispose()
+        closeWindow()
         return true
     }
 

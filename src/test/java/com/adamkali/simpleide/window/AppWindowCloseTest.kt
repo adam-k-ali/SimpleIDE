@@ -13,7 +13,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
-import javax.swing.JFrame
 
 class AppWindowCloseTest {
     @BeforeEach
@@ -25,27 +24,27 @@ class AppWindowCloseTest {
     }
 
     @Test
-    fun dirtyCancel_keepsTheFrameOpen() {
+    fun dirtyCancel_doesNotCloseTheWindow() {
         val file = tempFile("aaa")
         assertTrue(OpenFile.open(file))
         ActionsList.TYPE_CHARACTER.execute('z')
-        val frame = packedFrame()
+        var closed = false
 
-        assertFalse(AppWindow.handleWindowClosing(frame))
-        assertTrue(frame.isDisplayable)
+        assertFalse(AppWindow.handleWindowClosing { closed = true })
+        assertFalse(closed)
         assertEquals("aaa", Files.readString(file, StandardCharsets.UTF_8))
     }
 
     @Test
-    fun dirtyDiscard_disposesTheFrameWithoutWriting() {
+    fun dirtyDiscard_closesWithoutWriting() {
         val file = tempFile("aaa")
         assertTrue(OpenFile.open(file))
         ActionsList.TYPE_CHARACTER.execute('z')
         OpenFile.prompt = { UnsavedChoice.DISCARD }
-        val frame = packedFrame()
+        var closed = false
 
-        assertTrue(AppWindow.handleWindowClosing(frame))
-        assertFalse(frame.isDisplayable)
+        assertTrue(AppWindow.handleWindowClosing { closed = true })
+        assertTrue(closed)
         assertEquals("aaa", Files.readString(file, StandardCharsets.UTF_8))
     }
 
@@ -58,18 +57,11 @@ class AppWindowCloseTest {
             prompted = true
             UnsavedChoice.CANCEL
         }
-        val frame = packedFrame()
+        var closed = false
 
-        assertTrue(AppWindow.handleWindowClosing(frame))
-        assertFalse(frame.isDisplayable)
+        assertTrue(AppWindow.handleWindowClosing { closed = true })
+        assertTrue(closed)
         assertFalse(prompted)
-    }
-
-    private fun packedFrame(): JFrame {
-        val frame = JFrame()
-        frame.pack()
-        assertTrue(frame.isDisplayable)
-        return frame
     }
 
     private fun tempFile(contents: String) = Files.createTempFile("simpleide-", ".txt").also {
