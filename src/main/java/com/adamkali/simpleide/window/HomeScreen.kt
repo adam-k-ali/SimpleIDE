@@ -1,6 +1,7 @@
 package com.adamkali.simpleide.window
 
 import com.adamkali.simpleide.Global
+import com.adamkali.simpleide.editor.io.OpenFile
 import com.adamkali.simpleide.preferences.EditorColors
 import com.adamkali.simpleide.preferences.RecentProject
 import com.adamkali.simpleide.preferences.RecentProjects
@@ -82,11 +83,14 @@ class HomeScreen : JPanel() {
         content.add(recentsHost)
 
         add(content)
-        rebuildRecents()
+        refreshRecents()
     }
 
-    private fun openProject() {
+    fun openProject() {
         val path = chooseProjectDir() ?: return
+        if (!OpenFile.confirmIfDirty()) {
+            return
+        }
         try {
             ProjectManager.load(path)
             onProjectReady()
@@ -95,8 +99,11 @@ class HomeScreen : JPanel() {
         }
     }
 
-    private fun newProject() {
+    fun newProject() {
         val request = chooseNewProject() ?: return
+        if (!OpenFile.confirmIfDirty()) {
+            return
+        }
         try {
             ProjectManager.create(request.parentDir, request.projectName)
             onProjectReady()
@@ -105,18 +112,7 @@ class HomeScreen : JPanel() {
         }
     }
 
-    private fun openRecent(path: Path) {
-        try {
-            ProjectManager.load(path)
-            onProjectReady()
-        } catch (e: Exception) {
-            RecentProjects.remove(path)
-            rebuildRecents()
-            showError("Error", "Could not open project: ${e.message}")
-        }
-    }
-
-    private fun rebuildRecents() {
+    fun refreshRecents() {
         recentsHost.removeAll()
         val recents = RecentProjects.list()
         if (recents.isEmpty()) {
@@ -140,6 +136,20 @@ class HomeScreen : JPanel() {
         recentButtons = buttons
         recentsHost.revalidate()
         recentsHost.repaint()
+    }
+
+    private fun openRecent(path: Path) {
+        if (!OpenFile.confirmIfDirty()) {
+            return
+        }
+        try {
+            ProjectManager.load(path)
+            onProjectReady()
+        } catch (e: Exception) {
+            RecentProjects.remove(path)
+            refreshRecents()
+            showError("Error", "Could not open project: ${e.message}")
+        }
     }
 
     private fun recentButton(entry: RecentProject): JButton {
