@@ -469,7 +469,11 @@ public class CodeEditor extends JPanel implements Scrollable {
                     break;
                 case KeyEvent.VK_S:
                     if (isMenuShortcut(e)) {
-                        ActionsList.SAVE.execute();
+                        if (isShift(e)) {
+                            ActionsList.SAVE_AS.execute();
+                        } else {
+                            ActionsList.SAVE.execute();
+                        }
                         e.consume();
                     }
                     break;

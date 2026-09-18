@@ -143,6 +143,38 @@ object ProjectManager {
     }
 
     /**
+     * Creates an empty file under [parent] and adds it to the in-memory tree.
+     * Does not reload the project.
+     */
+    fun createFile(parent: SourcePackage, name: String): Path {
+        val dest = resolveNewChild(parent, name)
+        Files.writeString(dest, "", StandardCharsets.UTF_8)
+        parent.addSourceFile(SourceFile(dest))
+        return dest
+    }
+
+    /**
+     * Creates a folder under [parent] and adds it to the in-memory tree.
+     * Does not reload the project.
+     */
+    fun createFolder(parent: SourcePackage, name: String): Path {
+        val dest = resolveNewChild(parent, name)
+        Files.createDirectory(dest)
+        parent.addSourcePackage(SourcePackage(dest))
+        return dest
+    }
+
+    private fun resolveNewChild(parent: SourcePackage, name: String): Path {
+        val trimmed = name.trim()
+        validateEntryName(trimmed, "Name")
+        val dest = parent.getPath().resolve(trimmed)
+        if (Files.exists(dest)) {
+            throw IllegalArgumentException("A file or folder already exists with that name")
+        }
+        return dest
+    }
+
+    /**
      * Ensures [projectDir] has a `.simple` directory and exactly one `.proj` file.
      * Creates missing metadata using the folder name; does not create `src/`.
      */
@@ -190,14 +222,18 @@ object ProjectManager {
     }
 
     private fun validateProjectName(name: String) {
+        validateEntryName(name, "Project name")
+    }
+
+    private fun validateEntryName(name: String, label: String) {
         if (name.isEmpty()) {
-            throw IllegalArgumentException("Project name cannot be blank")
+            throw IllegalArgumentException("$label cannot be blank")
         }
         if (name == "." || name == "..") {
-            throw IllegalArgumentException("Project name is invalid")
+            throw IllegalArgumentException("$label is invalid")
         }
         if (name.contains('/') || name.contains('\\')) {
-            throw IllegalArgumentException("Project name cannot contain path separators")
+            throw IllegalArgumentException("$label cannot contain path separators")
         }
     }
 

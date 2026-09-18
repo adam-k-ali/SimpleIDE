@@ -172,6 +172,81 @@ class ProjectManagerTest {
         assertTrue(RecentProjects.list().isEmpty())
     }
 
+    @Test
+    fun createFile_writesEmptyFileAndAddsToSourceFolder() {
+        val dest = ProjectManager.create(tempDir(), "Demo")
+        val src = ProjectManager.activeProject!!.sourceFolders.single()
+        val proj = dest.resolve(".simple").resolve("Demo.proj")
+        val before = Files.readString(proj, StandardCharsets.UTF_8)
+
+        val created = ProjectManager.createFile(src, "Hello.java")
+
+        assertEquals(dest.resolve("src").resolve("Hello.java"), created)
+        assertTrue(Files.isRegularFile(created))
+        assertEquals("", Files.readString(created, StandardCharsets.UTF_8))
+        assertEquals(listOf("Hello.java"), src.sourceFiles.map { it.getFileName() })
+        assertEquals(before, Files.readString(proj, StandardCharsets.UTF_8))
+    }
+
+    @Test
+    fun createFolder_makesDirectoryAndAddsToSourceFolder() {
+        val dest = ProjectManager.create(tempDir(), "Demo")
+        val src = ProjectManager.activeProject!!.sourceFolders.single()
+
+        val created = ProjectManager.createFolder(src, "util")
+
+        assertEquals(dest.resolve("src").resolve("util"), created)
+        assertTrue(Files.isDirectory(created))
+        assertEquals(listOf("util"), src.sourcePackages.map { it.getName() })
+        assertTrue(src.sourcePackages.single().sourceFiles.isEmpty())
+    }
+
+    @Test
+    fun createFile_trimsName() {
+        val dest = ProjectManager.create(tempDir(), "Demo")
+        val src = ProjectManager.activeProject!!.sourceFolders.single()
+
+        val created = ProjectManager.createFile(src, "  Hello.java  ")
+
+        assertEquals(dest.resolve("src").resolve("Hello.java"), created)
+        assertEquals("Hello.java", src.sourceFiles.single().getFileName())
+    }
+
+    @Test
+    fun createFile_failsIfNameAlreadyExists() {
+        val dest = ProjectManager.create(tempDir(), "Demo")
+        val src = ProjectManager.activeProject!!.sourceFolders.single()
+        ProjectManager.createFile(src, "Hello.java")
+
+        val error = assertThrows(IllegalArgumentException::class.java) {
+            ProjectManager.createFile(src, "Hello.java")
+        }
+        assertTrue(error.message!!.contains("already exists"), error.message)
+        assertEquals(1, src.sourceFiles.size)
+
+        val folderError = assertThrows(IllegalArgumentException::class.java) {
+            ProjectManager.createFolder(src, "Hello.java")
+        }
+        assertTrue(folderError.message!!.contains("already exists"), folderError.message)
+        assertTrue(Files.isRegularFile(dest.resolve("src").resolve("Hello.java")))
+        assertFalse(Files.isDirectory(dest.resolve("src").resolve("Hello.java")))
+    }
+
+    @Test
+    fun createFile_rejectsBlankAndPathSeparatorNames() {
+        val dest = ProjectManager.create(tempDir(), "Demo")
+        val src = ProjectManager.activeProject!!.sourceFolders.single()
+
+        assertThrows(IllegalArgumentException::class.java) { ProjectManager.createFile(src, "   ") }
+        assertThrows(IllegalArgumentException::class.java) { ProjectManager.createFile(src, ".") }
+        assertThrows(IllegalArgumentException::class.java) { ProjectManager.createFile(src, "..") }
+        assertThrows(IllegalArgumentException::class.java) { ProjectManager.createFile(src, "foo/bar") }
+        assertThrows(IllegalArgumentException::class.java) { ProjectManager.createFolder(src, "foo\\bar") }
+        assertTrue(src.sourceFiles.isEmpty())
+        assertTrue(src.sourcePackages.isEmpty())
+        assertEquals(0, Files.list(dest.resolve("src")).use { it.count() })
+    }
+
     private fun tempDir(): Path = Files.createTempDirectory("simpleide-project-").also {
         it.toFile().deleteOnExit()
     }

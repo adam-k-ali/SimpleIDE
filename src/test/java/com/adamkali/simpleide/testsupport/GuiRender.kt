@@ -23,11 +23,12 @@ object GuiRender {
             component,
             MouseEvent.MOUSE_CLICKED,
             System.currentTimeMillis(),
-            0,
+            InputEvent.BUTTON1_DOWN_MASK,
             x,
             y,
             1,
-            false
+            false,
+            MouseEvent.BUTTON1
         )
         component.dispatchEvent(event)
     }
@@ -36,6 +37,48 @@ object GuiRender {
         val id = if (entered) MouseEvent.MOUSE_ENTERED else MouseEvent.MOUSE_EXITED
         component.dispatchEvent(
             MouseEvent(component, id, System.currentTimeMillis(), 0, x, y, 0, false)
+        )
+    }
+
+    fun popup(component: JComponent, x: Int = 2, y: Int = 2) {
+        component.dispatchEvent(
+            MouseEvent(
+                component,
+                MouseEvent.MOUSE_PRESSED,
+                System.currentTimeMillis(),
+                InputEvent.BUTTON3_DOWN_MASK,
+                x,
+                y,
+                1,
+                true,
+                MouseEvent.BUTTON3
+            )
+        )
+        component.dispatchEvent(
+            MouseEvent(
+                component,
+                MouseEvent.MOUSE_RELEASED,
+                System.currentTimeMillis(),
+                0,
+                x,
+                y,
+                1,
+                false,
+                MouseEvent.BUTTON3
+            )
+        )
+        component.dispatchEvent(
+            MouseEvent(
+                component,
+                MouseEvent.MOUSE_CLICKED,
+                System.currentTimeMillis(),
+                0,
+                x,
+                y,
+                1,
+                false,
+                MouseEvent.BUTTON3
+            )
         )
     }
 

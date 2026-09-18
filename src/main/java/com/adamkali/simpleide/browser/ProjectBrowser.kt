@@ -17,7 +17,10 @@ import java.awt.event.MouseListener
 import javax.swing.BorderFactory
 import javax.swing.BoxLayout
 import javax.swing.JLabel
+import javax.swing.JMenuItem
+import javax.swing.JOptionPane
 import javax.swing.JPanel
+import javax.swing.JPopupMenu
 
 /**
  * The ProjectBrowser class is a JPanel that displays the project structure.
@@ -25,6 +28,8 @@ import javax.swing.JPanel
 class ProjectBrowser : JPanel(), ProjectActivityListener, MouseListener {
     private val expandedPaths = mutableSetOf<String>()
     var onFileOpened: (() -> Unit)? = null
+    var promptName: (title: String) -> String? = { defaultPromptName(it) }
+    var showError: (title: String, message: String) -> Unit = ::swingError
 
     init {
         addMouseListener(this)
@@ -92,6 +97,9 @@ class ProjectBrowser : JPanel(), ProjectActivityListener, MouseListener {
             }
             rebuildTree()
         }
+        folderButton.onPopup = { event ->
+            showFolderMenu(folderButton, sourcePackage, event)
+        }
         add(folderButton)
 
         if (folderButton.dropped) {
@@ -114,6 +122,55 @@ class ProjectBrowser : JPanel(), ProjectActivityListener, MouseListener {
     override fun onProjectLoad(project: Project) {
         expandedPaths.clear()
         rebuildTree()
+    }
+
+    fun createFileIn(sourcePackage: SourcePackage) {
+        val name = promptName("New File") ?: return
+        try {
+            val created = ProjectManager.createFile(sourcePackage, name)
+            expandedPaths.add(sourcePackage.getPath().toString())
+            rebuildTree()
+            if (OpenFile.open(created)) {
+                onFileOpened?.invoke()
+            }
+        } catch (e: Exception) {
+            showError("Error", "Could not create file: ${e.message}")
+        }
+    }
+
+    fun createFolderIn(sourcePackage: SourcePackage) {
+        val name = promptName("New Folder") ?: return
+        try {
+            ProjectManager.createFolder(sourcePackage, name)
+            expandedPaths.add(sourcePackage.getPath().toString())
+            rebuildTree()
+        } catch (e: Exception) {
+            showError("Error", "Could not create folder: ${e.message}")
+        }
+    }
+
+    private fun showFolderMenu(component: Component, sourcePackage: SourcePackage, event: MouseEvent) {
+        val menu = JPopupMenu()
+        val newFile = JMenuItem("New File")
+        newFile.addActionListener { createFileIn(sourcePackage) }
+        val newFolder = JMenuItem("New Folder")
+        newFolder.addActionListener { createFolderIn(sourcePackage) }
+        menu.add(newFile)
+        menu.add(newFolder)
+        menu.show(component, event.x, event.y)
+    }
+
+    private fun defaultPromptName(title: String): String? {
+        return JOptionPane.showInputDialog(
+            this,
+            "Name:",
+            title,
+            JOptionPane.PLAIN_MESSAGE
+        )
+    }
+
+    private fun swingError(title: String, message: String) {
+        JOptionPane.showMessageDialog(this, message, title, JOptionPane.ERROR_MESSAGE)
     }
 
     override fun mouseClicked(e: MouseEvent?) {
