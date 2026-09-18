@@ -9,6 +9,7 @@ import com.adamkali.simpleide.preferences.ThemeData
 import com.adamkali.simpleide.project.ProjectManager
 import com.formdev.flatlaf.FlatDarkLaf
 import java.awt.BorderLayout
+import java.awt.Container
 import java.awt.Dimension
 import javax.swing.JFrame
 import javax.swing.JPanel
@@ -16,7 +17,8 @@ import javax.swing.Timer
 import javax.swing.UIManager
 
 object AppWindow {
-    private lateinit var frame: JFrame
+    private var frame: JFrame? = null
+    private lateinit var contentHost: Container
     private lateinit var editorPanel: EditorPanel
     private lateinit var statusPanel: StatusPanel
     private var editorTimer: Timer? = null
@@ -25,11 +27,12 @@ object AppWindow {
         private set
     internal lateinit var fileMenu: FileMenuBar
         private set
+    internal var windowTitle: String = "SimpleIDE"
+        private set
 
     fun setTitle(title: String) {
-        if (this::frame.isInitialized) {
-            frame.title = "SimpleIDE - $title"
-        }
+        windowTitle = "SimpleIDE - $title"
+        frame?.title = windowTitle
     }
 
     fun loadTheme() {
@@ -42,29 +45,33 @@ object AppWindow {
         UIManager.put("TitlePane.unifiedBackground", false)
         loadTheme()
 
-        val created = createFrame()
+        val created = JFrame("SimpleIDE")
+        created.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
+        created.setSize(1100, 720)
+        created.setLocationRelativeTo(null)
+        installSession(created.contentPane)
+        created.jMenuBar = fileMenu
+        frame = created
         created.isVisible = true
     }
 
-    internal fun startForTest(): JFrame {
+    internal fun startForTest(): JPanel {
         disposeForTest()
-        return createFrame()
+        val host = JPanel(BorderLayout())
+        installSession(host)
+        return host
     }
 
     internal fun disposeForTest() {
         editorTimer?.stop()
         editorTimer = null
-        if (this::frame.isInitialized) {
-            frame.dispose()
-        }
+        frame?.dispose()
+        frame = null
+        windowTitle = "SimpleIDE"
     }
 
-    private fun createFrame(): JFrame {
-        frame = JFrame("SimpleIDE")
-        frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
-        frame.setSize(1100, 720)
-        frame.setLocationRelativeTo(null)
-
+    private fun installSession(host: Container) {
+        contentHost = host
         homeScreen = HomeScreen()
         homeScreen.onProjectReady = { showEditor() }
 
@@ -73,10 +80,10 @@ object AppWindow {
         fileMenu.openProjectItem.addActionListener { homeScreen.openProject() }
         fileMenu.closeProjectItem.addActionListener { closeProject() }
         fileMenu.setProjectOpen(ProjectManager.activeProject != null)
-        frame.jMenuBar = fileMenu
 
-        frame.add(homeScreen)
-        return frame
+        host.removeAll()
+        host.add(homeScreen)
+        windowTitle = "SimpleIDE"
     }
 
     private fun showEditor() {
@@ -92,10 +99,10 @@ object AppWindow {
         container.add(statusPanel, BorderLayout.SOUTH)
         container.preferredSize = Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE)
 
-        frame.contentPane.removeAll()
-        frame.contentPane.add(container)
-        frame.revalidate()
-        frame.repaint()
+        contentHost.removeAll()
+        contentHost.add(container)
+        contentHost.revalidate()
+        contentHost.repaint()
         editorPanel.codeEditor.requestFocusInWindow()
         fileMenu.setProjectOpen(true)
 
@@ -109,13 +116,14 @@ object AppWindow {
     private fun showHome() {
         editorTimer?.stop()
         editorTimer = null
-        frame.contentPane.removeAll()
-        frame.contentPane.add(homeScreen)
-        frame.title = "SimpleIDE"
+        contentHost.removeAll()
+        contentHost.add(homeScreen)
+        windowTitle = "SimpleIDE"
+        frame?.title = windowTitle
         fileMenu.setProjectOpen(false)
         homeScreen.refreshRecents()
-        frame.revalidate()
-        frame.repaint()
+        contentHost.revalidate()
+        contentHost.repaint()
     }
 
     private fun closeProject() {

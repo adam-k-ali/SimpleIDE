@@ -16,12 +16,12 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.awt.Container
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import javax.swing.JButton
-import javax.swing.JFrame
 import javax.swing.JLabel
 
 class AppWindowGuiTest {
@@ -47,35 +47,35 @@ class AppWindowGuiTest {
 
     @Test
     fun fileMenu_onHome_closeProjectIsDisabled() {
-        val frame = startWindow()
+        val host = startWindow()
 
-        assertEquals("File", frame.jMenuBar.getMenu(0).text)
+        assertEquals("File", AppWindow.fileMenu.getMenu(0).text)
         assertEquals("New Project", AppWindow.fileMenu.newProjectItem.text)
         assertEquals("Open Project", AppWindow.fileMenu.openProjectItem.text)
         assertEquals("Close Project", AppWindow.fileMenu.closeProjectItem.text)
         assertFalse(AppWindow.fileMenu.closeProjectItem.isEnabled)
-        assertTrue(showingHome(frame))
+        assertTrue(showingHome(host))
         GuiRender.render(AppWindow.homeScreen, 800, 600)
     }
 
     @Test
     fun openProjectFromMenu_showsEditorAndEnablesClose() {
-        val frame = startWindow()
+        val host = startWindow()
         openProject(sampleProject)
 
-        assertFalse(showingHome(frame))
+        assertFalse(showingHome(host))
         assertTrue(AppWindow.fileMenu.closeProjectItem.isEnabled)
         assertEquals("TestProject", ProjectManager.activeProject?.getProjectName())
     }
 
     @Test
     fun openProjectButton_showsEditor() {
-        val frame = startWindow()
+        val host = startWindow()
         AppWindow.homeScreen.chooseProjectDir = { sampleProject }
         AppWindow.homeScreen.openButton.doClick()
         restubOpenFile()
 
-        assertFalse(showingHome(frame))
+        assertFalse(showingHome(host))
         assertTrue(AppWindow.fileMenu.closeProjectItem.isEnabled)
         assertEquals("TestProject", ProjectManager.activeProject?.getProjectName())
     }
@@ -84,36 +84,36 @@ class AppWindowGuiTest {
     fun newProjectFromMenu_showsEditor() {
         val parent = Files.createTempDirectory("simpleide-menu-new-")
         parent.toFile().deleteOnExit()
-        val frame = startWindow()
+        val host = startWindow()
         AppWindow.homeScreen.chooseNewProject = { NewProjectRequest(parent, "FromMenu") }
 
         AppWindow.fileMenu.newProjectItem.doClick()
         restubOpenFile()
 
-        assertFalse(showingHome(frame))
+        assertFalse(showingHome(host))
         assertEquals("FromMenu", ProjectManager.activeProject?.getProjectName())
         assertTrue(AppWindow.fileMenu.closeProjectItem.isEnabled)
     }
 
     @Test
     fun closeProject_returnsToHomeAndKeepsRecents() {
-        val frame = startWindow()
+        val host = startWindow()
         openProject(sampleProject)
 
         AppWindow.fileMenu.closeProjectItem.doClick()
 
-        assertTrue(showingHome(frame))
+        assertTrue(showingHome(host))
         assertNull(ProjectManager.activeProject)
         assertFalse(AppWindow.fileMenu.closeProjectItem.isEnabled)
         assertEquals("", Global.getCursor().getDocument().toText())
-        assertEquals("SimpleIDE", frame.title)
+        assertEquals("SimpleIDE", AppWindow.windowTitle)
         assertEquals(listOf("TestProject"), AppWindow.homeScreen.recentButtons.map { recentName(it) })
         GuiRender.render(AppWindow.homeScreen, 800, 600)
     }
 
     @Test
     fun closeProject_cancelDirty_staysInEditor() {
-        val frame = startWindow()
+        val host = startWindow()
         openProject(sampleProject)
 
         val file = tempFile("aaa")
@@ -123,7 +123,7 @@ class AppWindowGuiTest {
 
         AppWindow.fileMenu.closeProjectItem.doClick()
 
-        assertFalse(showingHome(frame))
+        assertFalse(showingHome(host))
         assertEquals("TestProject", ProjectManager.activeProject?.getProjectName())
         assertTrue(OpenFile.isDirty())
         assertEquals("zaaa", Global.getCursor().getDocument().toText())
@@ -135,33 +135,34 @@ class AppWindowGuiTest {
     fun openWhileProjectOpen_switchesProject_andSecondCloseReturnsHome() {
         val other = Files.createTempDirectory("simpleide-switch-")
         other.toFile().deleteOnExit()
+        Files.createDirectories(other.resolve("src"))
 
-        val frame = startWindow()
+        val host = startWindow()
         openProject(sampleProject)
         assertEquals("TestProject", ProjectManager.activeProject?.getProjectName())
 
         openProject(other)
         assertEquals(other.fileName.toString(), ProjectManager.activeProject?.getProjectName())
-        assertFalse(showingHome(frame))
+        assertFalse(showingHome(host))
 
         AppWindow.fileMenu.closeProjectItem.doClick()
-        assertTrue(showingHome(frame))
+        assertTrue(showingHome(host))
         assertNull(ProjectManager.activeProject)
 
         openProject(sampleProject)
         assertEquals("TestProject", ProjectManager.activeProject?.getProjectName())
-        assertFalse(showingHome(frame))
+        assertFalse(showingHome(host))
 
         AppWindow.fileMenu.closeProjectItem.doClick()
-        assertTrue(showingHome(frame))
+        assertTrue(showingHome(host))
         assertNull(ProjectManager.activeProject)
         assertFalse(AppWindow.fileMenu.closeProjectItem.isEnabled)
     }
 
-    private fun startWindow(): JFrame {
-        val frame = AppWindow.startForTest()
+    private fun startWindow(): Container {
+        val host = AppWindow.startForTest()
         AppWindow.homeScreen.showError = { _, _ -> }
-        return frame
+        return host
     }
 
     private fun openProject(path: Path) {
@@ -175,8 +176,8 @@ class AppWindowGuiTest {
         OpenFile.prompt = { UnsavedChoice.DISCARD }
     }
 
-    private fun showingHome(frame: JFrame): Boolean {
-        return frame.contentPane.components.any { it is HomeScreen }
+    private fun showingHome(host: Container): Boolean {
+        return host.components.any { it is HomeScreen }
     }
 
     private fun recentName(button: JButton): String {
