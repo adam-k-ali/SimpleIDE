@@ -23,11 +23,12 @@ object GuiRender {
             component,
             MouseEvent.MOUSE_CLICKED,
             System.currentTimeMillis(),
-            0,
+            InputEvent.BUTTON1_DOWN_MASK,
             x,
             y,
             1,
-            false
+            false,
+            MouseEvent.BUTTON1
         )
         component.dispatchEvent(event)
     }

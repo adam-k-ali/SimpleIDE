@@ -51,7 +51,7 @@ class FolderButton(private val folder: SourcePackage) : JComponent() {
         alignmentX = Component.LEFT_ALIGNMENT
         addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
-                if (!SwingUtilities.isLeftMouseButton(e) || e.isPopupTrigger) {
+                if (e.isPopupTrigger || SwingUtilities.isRightMouseButton(e)) {
                     return
                 }
                 dropped = !dropped
