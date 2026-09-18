@@ -114,6 +114,16 @@ class Line {
         }
         return spans
     }
+
+    /**
+     * Token under [column], or the token that ends exactly at [column].
+     * Returns null in whitespace that is not a token boundary.
+     */
+    fun tokenSpanAt(column: Int): TokenSpan? {
+        val spans = tokenSpans()
+        spans.firstOrNull { column >= it.start && column < it.end }?.let { return it }
+        return spans.lastOrNull { it.end == column }
+    }
 }
 
 data class TokenSpan(val start: Int, val end: Int)
