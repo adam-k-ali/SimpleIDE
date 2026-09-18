@@ -46,6 +46,7 @@ The launch config sets `cwd` to `${workspaceFolder}` and compiles with Maven fir
 ## Features
 
 - Home Screen at startup: **Open Project** (choose a folder) or **New Project** (name + parent folder)
+- File menu: **New Project**, **Open Project**, and **Close Project** (returns to the Home Screen)
 - Open Project initializes `.simple/{folderName}.proj` when the folder is not yet a SimpleIDE project
 - New Project writes `Name/.simple/Name.proj` (`projectName` + `sourcePaths: ["src"]`) and an empty `src/` directory, then opens the editor
 - Project tree (left) and code editor (right), with a line/column status bar
@@ -73,7 +74,6 @@ The launch config sets `cwd` to `${workspaceFolder}` and compiles with Maven fir
 ## Current limitations
 
 - The app does not compile or run the open project.
-- After a project is open, there is no File menu to open or create another one; restart the app to return to the Home Screen.
 
 A sequenced plan to close these gaps (edit correctness, project session, undo/find, multi-file tabs, lexer, compile/run) is in [ROADMAP.md](ROADMAP.md).
 

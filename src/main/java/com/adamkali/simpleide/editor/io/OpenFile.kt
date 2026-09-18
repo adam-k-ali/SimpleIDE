@@ -79,7 +79,11 @@ object OpenFile {
         return loadFromDisk(target)
     }
 
-    private fun confirmIfDirty(): Boolean {
+    /**
+     * Prompts when the current buffer has unsaved changes.
+     * @return false if the user cancelled, or if Save was chosen and failed
+     */
+    fun confirmIfDirty(): Boolean {
         if (!isDirty()) {
             return true
         }

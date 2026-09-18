@@ -44,7 +44,7 @@ object ProjectManager {
     }
 
     /**
-     * Clears the active project and listeners. Intended for tests.
+     * Clears the active project and listeners. Used by Close Project and by tests.
      */
     fun reset() {
         callbacks.clear()
