@@ -3,6 +3,7 @@ package com.adamkali.simpleide.editor;
 import com.adamkali.simpleide.Global;
 import com.adamkali.simpleide.editor.io.Line;
 import com.adamkali.simpleide.editor.io.TextPosition;
+import com.adamkali.simpleide.editor.io.TokenSpan;
 import com.adamkali.simpleide.editor.io.action.ActionsList;
 import com.adamkali.simpleide.preferences.EditorColors;
 import com.adamkali.simpleide.project.lang.tokens.NewLineToken;
@@ -311,6 +312,43 @@ public class CodeEditor extends JPanel implements Scrollable {
                     default:
                         break;
                 }
+            } else if (menu) {
+                if (shift) {
+                    switch (keyCode) {
+                        case KeyEvent.VK_LEFT:
+                            cursor.moveAndSelect(cursor::moveLeftByToken);
+                            break;
+                        case KeyEvent.VK_RIGHT:
+                            cursor.moveAndSelect(cursor::moveRightByToken);
+                            break;
+                        case KeyEvent.VK_UP:
+                            cursor.moveAndSelect(cursor::moveUp);
+                            break;
+                        case KeyEvent.VK_DOWN:
+                            cursor.moveAndSelect(cursor::moveDown);
+                            break;
+                        default:
+                            break;
+                    }
+                } else {
+                    cursor.clearSelection();
+                    switch (keyCode) {
+                        case KeyEvent.VK_LEFT:
+                            cursor.moveLeftByToken();
+                            break;
+                        case KeyEvent.VK_RIGHT:
+                            cursor.moveRightByToken();
+                            break;
+                        case KeyEvent.VK_UP:
+                            cursor.moveUp();
+                            break;
+                        case KeyEvent.VK_DOWN:
+                            cursor.moveDown();
+                            break;
+                        default:
+                            break;
+                    }
+                }
             } else if (shift) {
                 switch (keyCode) {
                     case KeyEvent.VK_LEFT:
@@ -491,10 +529,8 @@ public class CodeEditor extends JPanel implements Scrollable {
     }
 
     public class MouseHandler implements MouseListener, MouseMotionListener {
-        private int firstX;
-        private int firstY;
-        private int lastX;
-        private int lastY;
+        private TextPosition dragOrigin;
+        private boolean draggedSincePress;
 
         private int getLine(int y) {
             return EditorCoordinates.lineAt(y, Global.getLineHeight(), Global.getCursor().getDocument().getLineCount());
@@ -508,31 +544,68 @@ public class CodeEditor extends JPanel implements Scrollable {
             );
         }
 
+        private boolean isShift(MouseEvent e) {
+            return (e.getModifiersEx() & InputEvent.SHIFT_DOWN_MASK) != 0;
+        }
+
+        private void applyMouseSelection(int clickCount, boolean shift, int line, int column) {
+            var cursor = Global.getCursor();
+            TextPosition hit = new TextPosition(line, column);
+
+            if (clickCount >= 2) {
+                selectTokenAt(hit);
+                TextPosition start = cursor.getSelectionStart();
+                dragOrigin = start != null ? start : hit;
+                return;
+            }
+
+            if (shift) {
+                cursor.moveAndSelect(() -> cursor.moveTo(line, column));
+                dragOrigin = cursor.getSelectionStart();
+                return;
+            }
+
+            cursor.clearSelection();
+            cursor.moveTo(line, column);
+            dragOrigin = hit;
+        }
+
+        private void selectTokenAt(TextPosition hit) {
+            var cursor = Global.getCursor();
+            cursor.moveTo(hit.getLine(), hit.getColumn());
+            Line line = cursor.getDocument().getLine(hit.getLine());
+            TokenSpan span = line.tokenSpanAt(hit.getColumn());
+            if (span == null) {
+                cursor.clearSelection();
+                return;
+            }
+            cursor.setSelection(
+                    new TextPosition(hit.getLine(), span.getStart()),
+                    new TextPosition(hit.getLine(), span.getEnd())
+            );
+            cursor.moveTo(hit.getLine(), span.getEnd());
+        }
 
         @Override
         public void mouseClicked(MouseEvent e) {
-            Global.getCursor().clearSelection();
-
-            int x = e.getX();
-            int y = e.getY();
-            int line = getLine(y);
-            int column = getColumn(x, line);
-            Global.getCursor().moveTo(line, column);
+            if (draggedSincePress) {
+                return;
+            }
+            int line = getLine(e.getY());
+            int column = getColumn(e.getX(), line);
+            applyMouseSelection(e.getClickCount(), isShift(e), line, column);
             update();
             repaint();
         }
 
         @Override
         public void mousePressed(MouseEvent e) {
-            firstX = e.getX();
-            firstY = e.getY();
-            lastX = e.getX();
-            lastY = e.getY();
-
-            int line = getLine(firstY);
-            int column = getColumn(firstX, line);
-            Global.getCursor().clearSelection();
-            Global.getCursor().moveTo(line, column);
+            draggedSincePress = false;
+            int line = getLine(e.getY());
+            int column = getColumn(e.getX(), line);
+            applyMouseSelection(e.getClickCount(), isShift(e), line, column);
+            update();
+            repaint();
         }
 
         @Override
@@ -553,18 +626,12 @@ public class CodeEditor extends JPanel implements Scrollable {
 
         @Override
         public void mouseDragged(MouseEvent e) {
-            lastX = e.getX();
-            lastY = e.getY();
-            int firstLine = getLine(firstY);
-            int firstColumn = getColumn(firstX, firstLine);
-
-            int lastLine = getLine(lastY);
-            int lastColumn = getColumn(lastX, lastLine);
-
-            Global.getCursor().setSelection(new TextPosition(firstLine, firstColumn), new TextPosition(lastLine, lastColumn));
+            draggedSincePress = true;
+            int lastLine = getLine(e.getY());
+            int lastColumn = getColumn(e.getX(), lastLine);
+            TextPosition origin = dragOrigin != null ? dragOrigin : new TextPosition(lastLine, lastColumn);
+            Global.getCursor().setSelection(origin, new TextPosition(lastLine, lastColumn));
             Global.getCursor().moveTo(lastLine, lastColumn);
-
-
             update();
             repaint();
         }

@@ -6,20 +6,19 @@ The north star is a small Java editor you can open a project folder in, edit sev
 
 ## Where things stand today
 
-Working today (as of `main` after [#12](https://github.com/adam-k-ali/SimpleIDE/pull/12)):
+Working today (as of `main` after Phase 0 edit-correctness work):
 
 - Home Screen: open a folder (creates `.simple/{folderName}.proj` if needed) or create a new project (`src/` + `.simple/Name.proj`)
 - Project tree, single-buffer editor, line/column status bar
 - Typing, Enter (copies indent), Backspace, Delete, Tab as 4 spaces
-- Mouse caret placement and drag selection
+- Mouse caret placement, drag selection, Shift+click extend, double-click token select
+- Shift+arrows character selection; Alt or Ctrl/Cmd+Left/Right token motion; Ctrl/Cmd+Shift+Left/Right token selection; Alt+Up/Down line swap
+- Typing, Backspace, and Delete replace the selection
+- Home / End / Ctrl+Home / Ctrl+End, Page Up / Page Down, Ctrl/Cmd+A select all
 - Copy / cut / paste, Ctrl+D duplicate line
 - Ctrl/Cmd+S save, Ctrl/Cmd+R reload (with unsaved prompt)
 - Caret-follow scrolling, current-line highlight, Java-like lexer highlighting
 - VS Code-style chrome: activity bar (Explorer only), single cosmetic tab, dark theme JSON
-
-In flight:
-
-- [#11](https://github.com/adam-k-ali/SimpleIDE/pull/11) — Shift+arrows selection, Alt token motion, Alt+Up/Down line swap
 
 Documented gaps (README):
 
