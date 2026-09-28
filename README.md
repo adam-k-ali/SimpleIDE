@@ -50,9 +50,11 @@ The launch config sets `cwd` to `${workspaceFolder}` and compiles with Maven fir
 - New Project writes `Name/.simple/Name.proj` (`projectName` + `sourcePaths: ["src"]`) and an empty `src/` directory, then opens the editor
 - Project tree (left) and code editor (right), with a line/column status bar
 - Typing, Enter, Backspace, Tab (inserted as 4 spaces), arrow keys
+- Shift+arrows to select by character; Ctrl/Cmd+Left/Right to jump by token; Ctrl/Cmd+Shift+Left/Right to select by token
 - Click a file in the project tree to open it in the editor
 - Ctrl/Cmd+S to save, Ctrl/Cmd+R to reload from disk (Save / Discard / Cancel if there are unsaved edits)
-- Mouse placement and drag selection
+- Mouse caret placement, drag selection, Shift+click to extend the selection, and double-click to select the token under the caret
+- Home / End (line), Ctrl/Cmd+Home / End (file), Page Up / Page Down, Ctrl/Cmd+A select all
 - Ctrl+D to duplicate the current line
 - Java-like syntax highlighting via a custom lexer
 - Current-line highlight from `src/main/resources/preferences/editor-theme.json`

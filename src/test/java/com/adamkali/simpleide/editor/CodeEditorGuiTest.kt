@@ -133,6 +133,83 @@ class CodeEditorGuiTest {
     }
 
     @Test
+    fun shiftClick_extendsSelectionFromCaret() {
+        Global.getCursor().getDocument().replaceText("abcd")
+        Global.getCursor().moveTo(0, 1)
+
+        val editor = CodeEditor()
+        editor.setSize(400, 120)
+        val x = EditorCoordinates.cursorX("abc", Global::getStringWidth)
+        val y = EditorCoordinates.lineTop(0, Global.getLineHeight()) + 4
+        GuiRender.click(editor, x, y, InputEvent.SHIFT_DOWN_MASK)
+
+        assertEquals("bc", Global.getCursor().getSelectedText())
+        assertEquals(3, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun shiftClick_keepsExistingSelectionAnchor() {
+        Global.getCursor().getDocument().replaceText("abcd")
+        Global.getCursor().moveTo(0, 1)
+
+        val editor = CodeEditor()
+        editor.setSize(400, 120)
+        dispatchShortcut(editor, KeyEvent.VK_RIGHT, InputEvent.SHIFT_DOWN_MASK)
+        assertEquals("b", Global.getCursor().getSelectedText())
+
+        val x = EditorCoordinates.cursorX("abc", Global::getStringWidth)
+        val y = EditorCoordinates.lineTop(0, Global.getLineHeight()) + 4
+        GuiRender.click(editor, x, y, InputEvent.SHIFT_DOWN_MASK)
+
+        assertEquals("bc", Global.getCursor().getSelectedText())
+        assertEquals(3, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun shiftDrag_usesPrePressCaretAsOrigin() {
+        Global.getCursor().getDocument().replaceText("abcd")
+        Global.getCursor().moveTo(0, 1)
+
+        val editor = CodeEditor()
+        editor.setSize(400, 120)
+        val startX = EditorCoordinates.cursorX("abc", Global::getStringWidth)
+        val endX = EditorCoordinates.cursorX("abcd", Global::getStringWidth)
+        val y = EditorCoordinates.lineTop(0, Global.getLineHeight()) + 4
+        GuiRender.drag(editor, startX, y, endX, y, InputEvent.SHIFT_DOWN_MASK)
+
+        assertEquals("bcd", Global.getCursor().getSelectedText())
+        assertEquals(4, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun doubleClick_selectsTokenUnderPointer() {
+        Global.getCursor().getDocument().replaceText("int x = 10;")
+
+        val editor = CodeEditor()
+        editor.setSize(400, 120)
+        val x = EditorCoordinates.cursorX("i", Global::getStringWidth)
+        val y = EditorCoordinates.lineTop(0, Global.getLineHeight()) + 4
+        GuiRender.click(editor, x, y, clickCount = 2)
+
+        assertEquals("int", Global.getCursor().getSelectedText())
+        assertEquals(3, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun doubleClick_onWhitespaceDoesNotSelectToken() {
+        Global.getCursor().getDocument().replaceText("int  x = 10;")
+
+        val editor = CodeEditor()
+        editor.setSize(400, 120)
+        val x = EditorCoordinates.cursorX("int ", Global::getStringWidth)
+        val y = EditorCoordinates.lineTop(0, Global.getLineHeight()) + 4
+        GuiRender.click(editor, x, y, clickCount = 2)
+
+        assertNull(Global.getCursor().getSelectedText())
+        assertEquals(4, Global.getCursor().getColumn())
+    }
+
+    @Test
     fun highKeyCodes_doNotCrashKeyboardHandler() {
         val editor = CodeEditor()
         editor.dispatchEvent(
@@ -400,6 +477,50 @@ class CodeEditorGuiTest {
 
         assertEquals("int", Global.getCursor().getSelectedText())
         assertEquals(3, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun ctrlShiftRight_selectsByToken() {
+        Global.getCursor().getDocument().replaceText("int x = 10;")
+        Global.getCursor().moveTo(0, 0)
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_RIGHT, InputEvent.CTRL_DOWN_MASK or InputEvent.SHIFT_DOWN_MASK)
+
+        assertEquals("int", Global.getCursor().getSelectedText())
+        assertEquals(3, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun metaShiftRight_selectsByToken() {
+        Global.getCursor().getDocument().replaceText("int x = 10;")
+        Global.getCursor().moveTo(0, 0)
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_RIGHT, InputEvent.META_DOWN_MASK or InputEvent.SHIFT_DOWN_MASK)
+
+        assertEquals("int", Global.getCursor().getSelectedText())
+        assertEquals(3, Global.getCursor().getColumn())
+    }
+
+    @Test
+    fun ctrlRight_movesByTokenWithoutSelecting() {
+        Global.getCursor().getDocument().replaceText("int x = 10;")
+        Global.getCursor().moveTo(0, 0)
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_RIGHT, InputEvent.CTRL_DOWN_MASK)
+
+        assertEquals(3, Global.getCursor().getColumn())
+        assertEquals(null, Global.getCursor().getSelectedText())
+    }
+
+    @Test
+    fun metaRight_movesByTokenWithoutSelecting() {
+        Global.getCursor().getDocument().replaceText("int x = 10;")
+        Global.getCursor().moveTo(0, 0)
+
+        dispatchShortcut(CodeEditor(), KeyEvent.VK_RIGHT, InputEvent.META_DOWN_MASK)
+
+        assertEquals(3, Global.getCursor().getColumn())
+        assertEquals(null, Global.getCursor().getSelectedText())
     }
 
     @Test
