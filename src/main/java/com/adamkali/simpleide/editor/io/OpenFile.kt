@@ -79,7 +79,11 @@ object OpenFile {
         return loadFromDisk(target)
     }
 
-    private fun confirmIfDirty(): Boolean {
+    /**
+     * Prompts when the current buffer has unsaved changes.
+     * @return true if the caller may proceed (clean, saved, or discarded)
+     */
+    fun confirmIfDirty(): Boolean {
         if (!isDirty()) {
             return true
         }

@@ -98,6 +98,58 @@ class OpenFileTest {
     }
 
     @Test
+    fun confirmIfDirty_whenClean_returnsTrueWithoutPrompting() {
+        val file = tempFile("hello")
+        assertTrue(OpenFile.open(file))
+        var prompted = false
+        OpenFile.prompt = {
+            prompted = true
+            UnsavedChoice.CANCEL
+        }
+
+        assertTrue(OpenFile.confirmIfDirty())
+        assertFalse(prompted)
+    }
+
+    @Test
+    fun confirmIfDirty_whenDirtyAndCancel_returnsFalseWithoutWriting() {
+        val file = tempFile("aaa")
+        assertTrue(OpenFile.open(file))
+        ActionsList.TYPE_CHARACTER.execute('z')
+        OpenFile.prompt = { UnsavedChoice.CANCEL }
+
+        assertFalse(OpenFile.confirmIfDirty())
+        assertEquals("zaaa", Global.getCursor().getDocument().toText())
+        assertEquals("aaa", Files.readString(file, StandardCharsets.UTF_8))
+        assertTrue(OpenFile.isDirty())
+    }
+
+    @Test
+    fun confirmIfDirty_whenDirtyAndDiscard_returnsTrueWithoutWriting() {
+        val file = tempFile("aaa")
+        assertTrue(OpenFile.open(file))
+        ActionsList.TYPE_CHARACTER.execute('z')
+        OpenFile.prompt = { UnsavedChoice.DISCARD }
+
+        assertTrue(OpenFile.confirmIfDirty())
+        assertEquals("zaaa", Global.getCursor().getDocument().toText())
+        assertEquals("aaa", Files.readString(file, StandardCharsets.UTF_8))
+        assertTrue(OpenFile.isDirty())
+    }
+
+    @Test
+    fun confirmIfDirty_whenDirtyAndSave_writesAndReturnsTrue() {
+        val file = tempFile("aaa")
+        assertTrue(OpenFile.open(file))
+        ActionsList.TYPE_CHARACTER.execute('z')
+        OpenFile.prompt = { UnsavedChoice.SAVE }
+
+        assertTrue(OpenFile.confirmIfDirty())
+        assertEquals("zaaa", Files.readString(file, StandardCharsets.UTF_8))
+        assertFalse(OpenFile.isDirty())
+    }
+
+    @Test
     fun saveOrReload_withNoOpenFile_isANoOp() {
         assertFalse(OpenFile.save())
         assertFalse(OpenFile.reload())
