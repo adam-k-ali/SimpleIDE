@@ -18,17 +18,22 @@ object GuiRender {
         return image
     }
 
-    fun click(component: JComponent, x: Int = 2, y: Int = 2) {
+    fun click(
+        component: JComponent,
+        x: Int = 2,
+        y: Int = 2,
+        modifiers: Int = 0,
+        clickCount: Int = 1
+    ) {
         val event = MouseEvent(
             component,
             MouseEvent.MOUSE_CLICKED,
             System.currentTimeMillis(),
-            InputEvent.BUTTON1_DOWN_MASK,
+            modifiers,
             x,
             y,
-            1,
-            false,
-            MouseEvent.BUTTON1
+            clickCount,
+            false
         )
         component.dispatchEvent(event)
     }
@@ -82,15 +87,15 @@ object GuiRender {
         )
     }
 
-    fun drag(component: JComponent, x1: Int, y1: Int, x2: Int, y2: Int) {
+    fun drag(component: JComponent, x1: Int, y1: Int, x2: Int, y2: Int, modifiers: Int = 0) {
         component.dispatchEvent(
-            MouseEvent(component, MouseEvent.MOUSE_PRESSED, System.currentTimeMillis(), InputEvent.BUTTON1_DOWN_MASK, x1, y1, 1, false)
+            MouseEvent(component, MouseEvent.MOUSE_PRESSED, System.currentTimeMillis(), modifiers or InputEvent.BUTTON1_DOWN_MASK, x1, y1, 1, false)
         )
         component.dispatchEvent(
-            MouseEvent(component, MouseEvent.MOUSE_DRAGGED, System.currentTimeMillis(), InputEvent.BUTTON1_DOWN_MASK, x2, y2, 1, false)
+            MouseEvent(component, MouseEvent.MOUSE_DRAGGED, System.currentTimeMillis(), modifiers or InputEvent.BUTTON1_DOWN_MASK, x2, y2, 1, false)
         )
         component.dispatchEvent(
-            MouseEvent(component, MouseEvent.MOUSE_RELEASED, System.currentTimeMillis(), 0, x2, y2, 1, false)
+            MouseEvent(component, MouseEvent.MOUSE_RELEASED, System.currentTimeMillis(), modifiers, x2, y2, 1, false)
         )
     }
 
