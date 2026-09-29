@@ -92,6 +92,16 @@ class EditorPanelGuiTest {
     }
 
     @Test
+    fun tabBar_showsDirtyMarkerForUntitledBuffer() {
+        val panel = EditorPanel()
+        assertEquals("Untitled", panel.editorTabBar.displayedTitle())
+
+        Global.getCursor().insertText("x")
+        panel.editorTabBar.refresh()
+        assertEquals("● Untitled", panel.editorTabBar.displayedTitle())
+    }
+
+    @Test
     fun openingLargeFile_loadsThousandsOfLines() {
         val panel = EditorPanel()
         ProjectManager.load(SAMPLE_PROJECT)

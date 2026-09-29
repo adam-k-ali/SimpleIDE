@@ -38,6 +38,19 @@ class FolderButtonGuiTest {
     }
 
     @Test
+    fun popupTrigger_doesNotToggleDropped() {
+        val button = FolderButton(SourcePackage(Paths.get("src")))
+        var popupCount = 0
+        button.onPopup = { popupCount++ }
+        button.size = button.preferredSize
+
+        GuiRender.popup(button)
+
+        assertFalse(button.dropped)
+        assertEquals(1, popupCount)
+    }
+
+    @Test
     fun paint_doesNotDrawDebugRedBorder() {
         val button = FolderButton(SourcePackage(Paths.get("src")))
         val image = GuiRender.render(button, 180, button.preferredSize.height)

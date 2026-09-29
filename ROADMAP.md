@@ -16,7 +16,8 @@ Working today (as of `main` after Phase 0 edit-correctness work):
 - Typing, Backspace, and Delete replace the selection
 - Home / End / Ctrl+Home / Ctrl+End, Page Up / Page Down, Ctrl/Cmd+A select all
 - Copy / cut / paste, Ctrl+D duplicate line
-- Ctrl/Cmd+S save, Ctrl/Cmd+R reload (with unsaved prompt)
+- Ctrl/Cmd+S save (Save As when untitled), Ctrl/Cmd+Shift+S Save As, Ctrl/Cmd+R reload (with unsaved prompt)
+- Right-click a folder in the project tree: New File / New Folder
 - Caret-follow scrolling, current-line highlight, Java-like lexer highlighting
 - VS Code-style chrome: activity bar (Explorer only), single cosmetic tab, dark theme JSON
 
@@ -75,13 +76,13 @@ Window and project:
 | 1.1 | File menu (or Home Screen command): New Project, Open Project, Close Project | `AppWindow`, `HomeScreen`. Close returns to the Home Screen instead of `EXIT_ON_CLOSE` only |
 | 1.2 | Confirm discard on **window close** if `OpenFile.isDirty()` | `AppWindow` + `OpenFile.confirmIfDirty` (today the prompt only runs on open/reload) |
 | 1.3 | Recent projects on the Home Screen | Persist a short list next to `.simple` (or in user prefs). Click to reopen |
-| 1.4 | Save As; allow saving an untitled buffer | `OpenFile` today no-ops `save()` when `path == null` |
+| 1.4 | Save As; allow saving an untitled buffer | Done: `OpenFile.saveAs`, Ctrl/Cmd+Shift+S; Ctrl/Cmd+S on untitled prompts for a path |
 
 Project tree:
 
 | Step | Change | Where |
 |------|--------|--------|
-| 1.5 | New file / new folder from the tree (context menu or toolbar) | `ProjectBrowser`, `ProjectManager`, then `rebuildTree()` |
+| 1.5 | New file / new folder from the tree (context menu or toolbar) | Done: folder context menu in `ProjectBrowser`; `ProjectManager.createFile` / `createFolder` |
 | 1.6 | Rename and delete (with dirty-buffer check if the file is open) | Same |
 | 1.7 | Refresh tree from disk | `ProjectManager.load` already rescans; expose it without requiring a full project reopen |
 

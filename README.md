@@ -52,7 +52,8 @@ The launch config sets `cwd` to `${workspaceFolder}` and compiles with Maven fir
 - Typing, Enter, Backspace, Tab (inserted as 4 spaces), arrow keys
 - Shift+arrows to select by character; Ctrl/Cmd+Left/Right to jump by token; Ctrl/Cmd+Shift+Left/Right to select by token
 - Click a file in the project tree to open it in the editor
-- Ctrl/Cmd+S to save, Ctrl/Cmd+R to reload from disk (Save / Discard / Cancel if there are unsaved edits)
+- Right-click a folder in the project tree to create a **New File** or **New Folder**
+- Ctrl/Cmd+S to save (Save As when the buffer is untitled), Ctrl/Cmd+Shift+S Save As, Ctrl/Cmd+R to reload from disk (Save / Discard / Cancel if there are unsaved edits)
 - Mouse caret placement, drag selection, Shift+click to extend the selection, and double-click to select the token under the caret
 - Home / End (line), Ctrl/Cmd+Home / End (file), Page Up / Page Down, Ctrl/Cmd+A select all
 - Ctrl+D to duplicate the current line

@@ -15,5 +15,6 @@ public class ActionsList {
     public static final Action PASTE = new PasteAction();
 
     public static final Action SAVE = new SaveAction();
+    public static final Action SAVE_AS = new SaveAsAction();
     public static final Action RELOAD = new ReloadAction();
 }
